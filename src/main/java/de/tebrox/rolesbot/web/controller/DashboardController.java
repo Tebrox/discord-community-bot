@@ -41,10 +41,26 @@ public class DashboardController {
 
     private final ObjectMapper objectMapper;
 
+    @GetMapping("/guild/{guildId}")
+    public String guildOverview(@PathVariable String guildId, Model model) {
+        SnowflakeValidator.validate(guildId, "guildId");
+        Guild guild = jda.getGuildById(guildId);
+        GuildConfig cfg = configManager.getConfig(guildId);
+        if (guild == null || cfg == null) return "redirect:/";
+
+        model.addAttribute("guildId", guildId);
+        model.addAttribute("guildName", guild.getName());
+        model.addAttribute("memberCount", guild.getMemberCount());
+        model.addAttribute("cfg", cfg);
+        model.addAttribute("buttonCount", cfg.getButtons() != null ? cfg.getButtons().size() : 0);
+        model.addAttribute("welcomeEnabled", cfg.getWelcome() != null && cfg.getWelcome().isEnabled());
+        return "guild";
+    }
+
     // ------------------------------------------------------------------ Dashboard
 
-    @GetMapping("/")
-    public String dashboard(Model model) {
+    @GetMapping("/legacy-dashboard")
+    public String legacy_dashboard(Model model) {
         List<Guild> guilds = jda.getGuilds();
         List<Map<String, Object>> guildData = new ArrayList<>();
         for (Guild guild : guilds) {
@@ -58,7 +74,7 @@ public class DashboardController {
         }
         model.addAttribute("guilds", guildData);
         model.addAttribute("totalGuilds", guilds.size());
-        return "dashboard";
+        return "legacy-dashboard";
     }
 
     // ------------------------------------------------------------------ Rollen / Buttons
@@ -71,7 +87,9 @@ public class DashboardController {
         if (cfg == null || guild == null) return "redirect:/";
 
         try {
-            model.addAttribute("buttonsJson", objectMapper.writeValueAsString(cfg.getButtons()));
+            String json = objectMapper.writeValueAsString(cfg.getButtons());
+            json = json.replace("</", "<\\/");
+            model.addAttribute("buttonsJson", json);
         } catch(Exception e) {
             log.warn("[Dashboard] Failed to serialize buttons to JSON: {}", e.getMessage());
             model.addAttribute("buttonsJson", "[]");
@@ -98,6 +116,7 @@ public class DashboardController {
                 for (Member member : guild.getMembersWithRoles(role)) {
                     Map<String, String> m = new LinkedHashMap<>();
                     m.put("username", member.getUser().getName());
+                    m.put("displayName", member.getUser().getEffectiveName());
                     m.put("userId", member.getId());
                     members.add(m);
                 }
@@ -208,6 +227,34 @@ public class DashboardController {
         return "redirect:/guild/" + guildId + "/roles";
     }
 
+    @PostMapping("/guild/{guildId}/roles/save-status-button")
+    public String saveStatusButton(@PathVariable String guildId,
+                                   @RequestParam String id,
+                                   @RequestParam String label,
+                                   @RequestParam(defaultValue = "SECONDARY") String style,
+                                   RedirectAttributes ra) {
+        SnowflakeValidator.validate(guildId, "guildId");
+        if (label == null || label.isBlank()) {
+            ra.addFlashAttribute("error", "Label darf nicht leer sein.");
+            return "redirect:/guild/" + guildId + "/roles";
+        }
+        try {
+            GuildConfig cfg = deepCopy(guildId);
+            if (cfg == null) return "redirect:/";
+
+            cfg.getStatusButton().setId(id);
+            cfg.getStatusButton().setLabel(label.trim());
+            cfg.getStatusButton().setStyle(style);
+
+            configManager.saveGuildConfig(guildId, cfg);
+            refreshPanel(guildId);
+            ra.addFlashAttribute("success", "Status-Button gespeichert.");
+        } catch (IOException e) {
+            ra.addFlashAttribute("error", "Speichern fehlgeschlagen: " + e.getMessage());
+        }
+        return "redirect:/guild/" + guildId + "/roles";
+    }
+
     // ------------------------------------------------------------------ Welcome
 
     @GetMapping("/guild/{guildId}/welcome")
@@ -235,6 +282,7 @@ public class DashboardController {
                               @RequestParam(required = false) String embedTitle,
                               @RequestParam(required = false) String embedDescription,
                               @RequestParam(required = false, defaultValue = "#5865F2") String embedColor,
+                              @RequestParam(required = false) String embedFooter,
                               RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
         try {
@@ -247,6 +295,7 @@ public class DashboardController {
             cfg.getWelcome().getEmbed().setEnabled("on".equals(embedEnabled) || "true".equals(embedEnabled));
             if (embedTitle != null) cfg.getWelcome().getEmbed().setTitle(embedTitle.trim());
             if (embedDescription != null) cfg.getWelcome().getEmbed().setDescription(embedDescription.trim());
+            if (embedFooter != null) cfg.getWelcome().getEmbed().setFooter(embedFooter.trim());
             cfg.getWelcome().getEmbed().setColor(embedColor);
 
             configManager.saveGuildConfig(guildId, cfg);
@@ -266,6 +315,20 @@ public class DashboardController {
         welcomeTrackingService.deleteWelcomedUser(guildId, userId);
         ra.addFlashAttribute("success", "User-Eintrag gelöscht.");
         return "redirect:/guild/" + guildId + "/welcome";
+    }
+
+    @GetMapping("/guild/{guildId}/roles/refresh")
+    public String refreshRolesPanel(@PathVariable String guildId, RedirectAttributes ra) {
+        SnowflakeValidator.validate(guildId, "guildId");
+
+        try {
+            refreshPanel(guildId);
+            ra.addFlashAttribute("success", "Panel wurde aktualisiert.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Aktualisieren fehlgeschlagen: " + e.getMessage());
+        }
+
+        return "redirect:/guild/" + guildId;
     }
 
     // ------------------------------------------------------------------ Internals

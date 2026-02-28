@@ -9,73 +9,85 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
-<nav>
-    <span class="brand">🤖 RolesBot</span>
-    <a th:href="@{/}">Dashboard</a>
-    <a th:href="@{/logs}">Logs</a>
-    <form th:action="@{/auth/logout}" method="post" style="margin-left:auto">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-    </form>
-</nav>
-<div class="wrap">
-    <div class="breadcrumb"><a th:href="@{/}">Dashboard</a> › <span th:text="${guildName}">Server</span></div>
-    <h1>Welcome</h1>
+    <div th:replace="~{fragments/header :: header('guild', ${guildId}, ${guildName})}"></div>
 
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <main class="container">
+        <div class="breadcrumb"><a th:href="@{'/dashboard/' + ${guildId}}">← <span th:text="${guildName}"></span></a></div>
+        <h2>Welcome</h2>
+        <p class="subtitle">
+            <span class="muted">Server:</span> <span th:text="${guildName}">Server</span>
+            <span class="muted">• Guild ID:</span> <code th:text="${guildId}">ID</code>
+        </p>
 
-    <!-- Settings Form -->
-    <div class="card">
-        <h2>Einstellungen</h2>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
         <form th:action="@{'/guild/' + ${guildId} + '/welcome/save'}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <fieldset>
-                <legend>Allgemein</legend>
-                <label>
-                    <input type="checkbox" name="enabled" th:checked="${wc.enabled}"/>
-                    Welcome aktiviert
-                </label>
-                <br/><br/>
-                <div class="row">
-                    <div>
-                        <label>Welcome Channel-ID</label>
-                        <input type="text" name="channelId" th:value="${wc.channelId}" placeholder="1234567890123456789"/>
-                    </div>
-                    <div>
-                        <label>Nachricht nach X Sekunden löschen (0 = nie)</label>
-                        <input type="number" name="deleteAfterSeconds" th:value="${wc.deleteAfterSeconds}" min="0"/>
-                    </div>
+
+            <section class="card">
+                <h3>Allgemein</h3>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="enabled" th:checked="${wc.enabled}"/>
+                        Welcome aktiviert
+                    </label>
                 </div>
-            </fieldset>
 
-            <fieldset>
-                <legend>Embed</legend>
-                <label>
-                    <input type="checkbox" name="embedEnabled" th:checked="${wc.embed.enabled}"/>
-                    Embed aktiviert
-                </label>
-                <br/><br/>
-                <label>Embed-Titel</label>
-                <input type="text" name="embedTitle" th:value="${wc.embed.title}"/>
-                <br/><br/>
-                <label>Embed-Beschreibung</label>
-                <textarea name="embedDescription" rows="3" th:text="${wc.embed.description}"></textarea>
-                <br/><br/>
-                <label>Farbe (Hex, z.B. #5865F2)</label>
-                <input type="text" name="embedColor" th:value="${wc.embed.color}" placeholder="#5865F2"/>
-            </fieldset>
+                <div class="form-group">
+                    <label>Welcome Channel-ID</label>
+                    <input type="text" name="channelId" class="form-input" th:value="${wc.channelId}" placeholder="1234567890123456789"/>
+                </div>
 
-            <button class="btn btn-primary" type="submit">Speichern</button>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Nachricht nach X Sekunden löschen (0 = nie)</label>
+                    <input type="number" name="deleteAfterSeconds" class="form-input" th:value="${wc.deleteAfterSeconds}" min="0"/>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Embed</h3>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="embedEnabled" th:checked="${wc.embed.enabled}"/>
+                        Embed aktiviert
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>Embed-Titel</label>
+                    <input type="text" name="embedTitle" class="form-input" th:value="${wc.embed.title}" maxlength="256"/>
+                </div>
+
+                <div class="form-group">
+                    <label>Embed-Beschreibung</label>
+                    <textarea name="embedDescription" rows="4" class="form-input" maxlength="4096" th:text="${wc.embed.description}"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Embed-Footer</label>
+                    <input type="text" name="embedFooter" class="form-input" th:value="${wc.embed.footer}" maxlength="2048" placeholder="z.B. User ID: {id}"/>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Farbe (Hex, z.B. #5865F2)</label>
+                    <input type="text" name="embedColor" class="form-input" th:value="${wc.embed.color}" placeholder="#5865F2"/>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Speichern</button>
+                <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/roles'}">Rollen</a>
+            </div>
         </form>
-    </div>
 
-    <!-- Placeholder Reference -->
-    <div class="card">
-        <h2>Platzhalter</h2>
-        <table>
-            <thead><tr><th>Platzhalter</th><th>Bedeutung</th></tr></thead>
-            <tbody>
+        <section class="card">
+            <h3>Platzhalter</h3>
+            <table>
+                <thead><tr><th>Platzhalter</th><th>Bedeutung</th></tr></thead>
+                <tbody>
                 <tr><td><code>{mention}</code></td><td>@User Ping</td></tr>
                 <tr><td><code>{user}</code></td><td>Username</td></tr>
                 <tr><td><code>{tag}</code></td><td>User#1234</td></tr>
@@ -83,16 +95,16 @@
                 <tr><td><code>{server}</code></td><td>Servername</td></tr>
                 <tr><td><code>{memberCount}</code></td><td>Mitgliederanzahl</td></tr>
                 <tr><td><code>{avatarUrl}</code></td><td>Avatar-URL</td></tr>
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </section>
 
-    <!-- Welcomed Users Table -->
-    <div class="card">
-        <h2>Bereits willkommen geheißen</h2>
-        <div th:if="${#lists.isEmpty(welcomedUsers)}" class="muted">Noch keine Einträge.</div>
-        <table th:if="${!#lists.isEmpty(welcomedUsers)}">
-            <thead>
+        <section class="card">
+            <h3>Bereits willkommen geheißen</h3>
+            <div th:if="${#lists.isEmpty(welcomedUsers)}" class="muted">Noch keine Einträge.</div>
+
+            <table th:if="${!#lists.isEmpty(welcomedUsers)}">
+                <thead>
                 <tr>
                     <th>Username</th>
                     <th>User ID</th>
@@ -100,26 +112,27 @@
                     <th>Uhrzeit</th>
                     <th>Aktion</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 <tr th:each="wu : ${welcomedUsers}">
                     <td th:text="${wu.username}">username</td>
                     <td><code th:text="${wu.userId}">userId</code></td>
                     <td th:text="${#temporals.format(wu.welcomedAt, 'dd.MM.yyyy')}">Datum</td>
                     <td th:text="${#temporals.format(wu.welcomedAt, 'HH:mm')}">Zeit</td>
                     <td>
-                        <form th:action="@{'/guild/' + ${guildId} + '/welcome/delete-user'}" method="post"
-                              style="display:inline" onsubmit="return confirm('Eintrag löschen?')">
+                        <form th:action="@{'/guild/' + ${guildId} + '/welcome/delete-user'}" method="post" style="display:inline" onsubmit="return confirm('Eintrag löschen?')">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <input type="hidden" name="userId" th:value="${wu.userId}"/>
                             <button class="btn btn-danger btn-sm" type="submit">Löschen</button>
                         </form>
                     </td>
                 </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-<script th:src="@{/js/main.js}"></script>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script th:src="@{/js/main.js}"></script>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

@@ -5,6 +5,9 @@
     return el ? el.getAttribute("content") : "";
   }
 
+  const btn = document.getElementById("login-btn");
+  if (btn) btn.addEventListener("click", doLogin);
+
   function doLogin() {
     const passwordInput = document.getElementById("password");
     const errorDiv = document.getElementById("error-msg");

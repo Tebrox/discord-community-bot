@@ -9,150 +9,153 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
-<nav>
-    <span class="brand">🤖 RolesBot</span>
-    <a th:href="@{/}">Dashboard</a>
-    <a th:href="@{/logs}">Logs</a>
-    <form th:action="@{/auth/logout}" method="post" style="margin-left:auto">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-    </form>
-</nav>
-<div class="wrap">
-    <div class="breadcrumb"><a th:href="@{/}">Dashboard</a> › <span th:text="${guildName}">Server</span></div>
-    <h1>Rollen-Buttons</h1>
+    <div th:replace="~{fragments/header :: header('guild', ${guildId}, ${guildName})}"></div>
 
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <main class="container">
+        <div class="breadcrumb"><a th:href="@{'/dashboard/' + ${guildId}}">← <span th:text="${guildName}"></span></a></div>
+        <h2>Rollen-Panel</h2>
+        <p class="subtitle">
+            <span class="muted">Server:</span> <span th:text="${guildName}">Server</span>
+            <span class="muted">• Guild ID:</span> <code th:text="${guildId}">ID</code>
+        </p>
 
-    <div class="stack" style="margin-bottom:12px">
-        <span class="pill">Server: <b th:text="${guildName}">Name</b></span>
-        <span class="pill">Guild ID: <code th:text="${guildId}">ID</code></span>
-        <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/welcome'}">Welcome-Einstellungen</a>
-    </div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-    <!-- Panel Title -->
-    <div class="card">
-        <h2>Panel-Titel</h2>
-        <form th:action="@{'/guild/' + ${guildId} + '/roles/save-title'}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="row">
-                <div>
-                    <label>Titel</label>
-                    <input type="text" name="title" th:value="${cfg.panel.title}" maxlength="256" required/>
+        <section class="card">
+            <h3>Panel Titel</h3>
+            <form th:action="@{'/guild/' + ${guildId} + '/roles/save-title'}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="form-group">
+                    <label for="panel-title">Titel</label>
+                    <input id="panel-title" type="text" name="title" class="form-input" th:value="${cfg.panel.title}" maxlength="256" required/>
                 </div>
-                <div style="display:flex;align-items:flex-end">
+
+                <div class="form-actions">
                     <button class="btn btn-primary" type="submit">Speichern</button>
                 </div>
-            </div>
-        </form>
-    </div>
+            </form>
+        </section>
 
-    <!-- Configured Buttons -->
-    <div class="card">
-        <h2>Konfigurierte Buttons</h2>
-        <div th:if="${#lists.isEmpty(cfg.buttons)}" class="muted">Noch keine Buttons konfiguriert.</div>
-        <table th:if="${!#lists.isEmpty(cfg.buttons)}">
-            <thead>
+        <section class="card">
+            <h3>Konfigurierte Buttons</h3>
+            <div th:if="${#lists.isEmpty(cfg.buttons)}" class="muted">Noch keine Buttons konfiguriert.</div>
+
+            <table th:if="${!#lists.isEmpty(cfg.buttons)}">
+                <thead>
                 <tr><th>ID</th><th>Label</th><th>Rollen-ID</th><th>Style</th><th>Aktion</th></tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 <tr th:each="btn : ${cfg.buttons}">
                     <td th:text="${btn.id}">id</td>
                     <td th:text="${btn.label}">label</td>
                     <td>
                         <code th:text="${btn.roleId}">roleId</code>
-                        <span th:if="${roleFoundByButtonId[btn.id] != null and !roleFoundByButtonId[btn.id]}" class="badge badge-warn">⚠️ Rolle nicht gefunden</span>
+                        <span th:if="${roleFoundByButtonId[btn.id] != null and !roleFoundByButtonId[btn.id]}" class="muted"> (Rolle nicht gefunden)</span>
                     </td>
                     <td th:text="${btn.style}">PRIMARY</td>
                     <td>
-                        <a class="btn btn-secondary btn-sm"
-                           th:href="@{'/guild/' + ${guildId} + '/roles?editId=' + ${btn.id}}">Bearbeiten</a>
-                        <form th:action="@{'/guild/' + ${guildId} + '/roles/delete-button'}" method="post"
-                              style="display:inline" onsubmit="return confirm('Button löschen?')">
+                        <a class="btn btn-secondary btn-sm" th:href="@{'/guild/' + ${guildId} + '/roles?editId=' + ${btn.id}}">Bearbeiten</a>
+                        <form th:action="@{'/guild/' + ${guildId} + '/roles/delete-button'}" method="post" style="display:inline" onsubmit="return confirm('Button löschen?')">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <input type="hidden" name="id" th:value="${btn.id}"/>
                             <button class="btn btn-danger btn-sm" type="submit">Löschen</button>
                         </form>
                     </td>
                 </tr>
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </section>
 
-    <!-- Status Button Info -->
-    <div class="card">
-        <h2>Status-Button (Meine Rollen)</h2>
-        <div class="stack">
-            <span class="pill">ID: <code th:text="${statusButton.id}">id</code></span>
-            <span class="pill">Label: <span th:text="${statusButton.label}">label</span></span>
-            <span class="pill">Style: <span th:text="${statusButton.style}">SECONDARY</span></span>
-        </div>
-        <p class="help">Der Status-Button wird über guilds.yml konfiguriert.</p>
-    </div>
+        <section class="card">
+            <h3>Status-Button (Meine Rollen)</h3>
+            <div class="muted" style="margin-bottom:0.75rem;">
+                Der Status-Button wird aktuell aus der Config geladen.
+            </div>
+            <div class="form-group">
+                <label>ID</label>
+                <input class="form-input" type="text" th:value="${statusButton.id}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Label</label>
+                <input class="form-input" type="text" th:value="${statusButton.label}" readonly>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Style</label>
+                <input class="form-input" type="text" th:value="${statusButton.style}" readonly>
+            </div>
+        </section>
 
-    <!-- Add/Edit Button Form -->
-    <div class="card">
-        <h2>Button hinzufügen / bearbeiten</h2>
-        <form th:action="@{'/guild/' + ${guildId} + '/roles/save-button'}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <fieldset>
-                <legend>Button-Daten</legend>
-                <label>Button-ID (max. 100 Zeichen)</label>
-                <label for="btn-id"></label><input type="text" name="id" id="btn-id" maxlength="100" required placeholder="z.B. role_btn_gaming"/>
-                <br/><br/>
-                <div class="row">
-                    <div>
-                        <label>Label</label>
-                        <label for="btn-label"></label><input type="text" name="label" id="btn-label" maxlength="80" required placeholder="z.B. Gaming"/>
-                    </div>
-                    <div>
-                        <label>Style</label>
-                        <label for="btn-style"></label><select name="style" id="btn-style">
-                            <option value="PRIMARY">PRIMARY</option>
-                            <option value="SECONDARY">SECONDARY</option>
-                            <option value="SUCCESS">SUCCESS</option>
-                            <option value="DANGER">DANGER</option>
-                        </select>
-                    </div>
+        <section class="card">
+            <h3>Button hinzufügen / bearbeiten</h3>
+            <form th:action="@{'/guild/' + ${guildId} + '/roles/save-button'}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="form-group">
+                    <label for="btn-id">Button-ID <span class="required">*</span></label>
+                    <input type="text" name="id" id="btn-id" class="form-input" maxlength="100" required placeholder="z.B. role_btn_gaming"/>
+                    <small>Die ID muss eindeutig sein und bleibt nach Möglichkeit stabil.</small>
                 </div>
-                <br/>
-                <label>Discord Rollen-ID</label>
-                <label for="btn-roleId"></label><input type="text" name="roleId" id="btn-roleId" required placeholder="z.B. 1234567890123456789"/>
-                <br/><br/>
-                <button class="btn btn-primary" type="submit">Speichern</button>
-            </fieldset>
-        </form>
-    </div>
 
-    <!-- Gruppen & Mitglieder -->
-    <div class="card">
-        <h2>Gruppen &amp; Mitglieder</h2>
-        <div th:each="group : ${roleGroups}" class="group-section">
-            <h3>
-                <span th:text="${group.label}">Label</span>
-                <span class="badge" th:text="'ID: ' + ${group.roleId}">ID</span>
-                <span th:if="${!group.roleFound}" class="badge badge-warn">⚠️ Rolle nicht gefunden</span>
-            </h3>
-            <div th:if="${group.roleFound}">
-                <div th:if="${#lists.isEmpty(group.members)}" class="muted">Keine Mitglieder mit dieser Rolle.</div>
-                <table th:if="${!#lists.isEmpty(group.members)}">
-                    <thead><tr><th>Username</th><th>User ID</th></tr></thead>
-                    <tbody>
+                <div class="form-group">
+                    <label for="btn-label">Label <span class="required">*</span></label>
+                    <input type="text" name="label" id="btn-label" class="form-input" maxlength="80" required placeholder="z.B. Gaming"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="btn-style">Style</label>
+                    <select name="style" id="btn-style" class="form-input">
+                        <option value="PRIMARY">PRIMARY</option>
+                        <option value="SECONDARY">SECONDARY</option>
+                        <option value="SUCCESS">SUCCESS</option>
+                        <option value="DANGER">DANGER</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="btn-roleId">Discord Rollen-ID <span class="required">*</span></label>
+                    <input type="text" name="roleId" id="btn-roleId" class="form-input" required placeholder="z.B. 1234567890123456789"/>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Speichern</button>
+                    <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/welcome'}">Welcome</a>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h3>Gruppen &amp; Mitglieder</h3>
+            <div th:if="${#lists.isEmpty(roleGroups)}" class="muted">Keine Buttons konfiguriert.</div>
+
+            <div th:each="group : ${roleGroups}" style="margin-bottom:1.5rem;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">
+                    <span th:text="${group.label}">Label</span>
+                    <span class="muted">•</span>
+                    <code th:text="${group.roleId}">ID</code>
+                    <span th:if="${!group.roleFound}" class="muted"> (Rolle nicht gefunden)</span>
+                </div>
+
+                <div th:if="${group.roleFound}">
+                    <div th:if="${#lists.isEmpty(group.members)}" class="muted">Keine Mitglieder mit dieser Rolle.</div>
+                    <table th:if="${!#lists.isEmpty(group.members)}">
+                        <thead><tr><th>Username</th><th>User ID</th></tr></thead>
+                        <tbody>
                         <tr th:each="m : ${group.members}">
                             <td th:text="${m.username}">username</td>
                             <td><code th:text="${m.userId}">userId</code></td>
                         </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-        <div th:if="${#lists.isEmpty(roleGroups)}" class="muted">Keine Buttons konfiguriert.</div>
-    </div>
-</div>
+        </section>
+    </main>
 
-<script id="buttons-json" type="application/json" th:text="${buttonsJson}"></script>
-<script th:src="@{/js/roles.js}"></script>
-<script th:src="@{/js/main.js}"></script>
+    <script id="buttons-json" type="application/json" th:utext="${buttonsJson}"></script>
+    <script th:src="@{/js/roles.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

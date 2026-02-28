@@ -9,68 +9,72 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         .log-container {
-            font-family: ui-monospace, monospace;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             font-size: 13px;
-            background: #1e1f22;
-            border-radius: 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius);
             padding: 14px;
             max-height: 60vh;
             overflow-y: auto;
             border: 1px solid var(--border);
         }
         .log-entry { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.03); }
-        .log-ts { color: #949ba4; }
+        .log-ts { color: var(--text-muted); }
         .log-level { font-weight: 700; min-width: 5ch; display: inline-block; }
         .log-info .log-level { color: #3ba55c; }
         .log-warn .log-level { color: #faa61a; }
         .log-error .log-level { color: #ed4245; }
 
-        .log-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .filter-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border);
-                      background: rgba(255,255,255,.06); color: var(--text); cursor: pointer; font-size: 12px; }
-        .filter-btn.active { background: rgba(88,101,242,.25); border-color: rgba(88,101,242,.5); }
+        .log-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 0.45rem 0.9rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.04);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .filter-btn.active { background: rgba(88,101,242,.18); border-color: rgba(88,101,242,.35); }
         #live-indicator { width: 8px; height: 8px; border-radius: 50%; background: #3ba55c;
                           display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     </style>
 </head>
 <body>
-<nav>
-    <span class="brand">🤖 RolesBot</span>
-    <a th:href="@{/}">Dashboard</a>
-    <a href="/logs" class="active">Logs</a>
-    <form th:action="@{/auth/logout}" method="post" style="margin-left:auto">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-    </form>
-</nav>
-<div class="wrap">
-    <h1>Live-Logs</h1>
+    <div th:replace="~{fragments/header :: header('logs', null, null)}"></div>
+    <main class="container">
+        <h2>Live-Logs</h2>
+        <p class="subtitle">Live-Ausgabe des Bots (Filter nach Level möglich).</p>
 
-    <div class="card">
-        <div class="log-toolbar">
-            <span><span id="live-indicator"></span>Live</span>
-            <button class="filter-btn active" type="button" data-level="ALL">Alle</button>
-            <button class="filter-btn" type="button" data-level="INFO">INFO</button>
-            <button class="filter-btn" type="button" data-level="WARN">WARN</button>
-            <button class="filter-btn" type="button" data-level="ERROR">ERROR</button>
+        <section class="card">
+            <h3>Stream</h3>
+            <div class="log-toolbar">
+                <span><span id="live-indicator"></span>Live</span>
+                <button class="filter-btn active" type="button" data-level="ALL">Alle</button>
+                <button class="filter-btn" type="button" data-level="INFO">INFO</button>
+                <button class="filter-btn" type="button" data-level="WARN">WARN</button>
+                <button class="filter-btn" type="button" data-level="ERROR">ERROR</button>
 
-            <button class="btn btn-secondary btn-sm" type="button" id="clear-display-btn" style="margin-left:auto">
-                Anzeige leeren
-            </button>
-        </div>
-        <div class="log-container" id="log-container">
-            <!-- Initial logs -->
-            <div th:each="entry : ${logs}"
-                 th:classappend="'log-entry log-' + ${#strings.toLowerCase(entry.level)}">
-                <span class="log-ts" th:text="${entry.timestamp}">00:00:00</span>
-                <span class="log-level" th:text="${entry.level}">INFO</span>
-                <span th:text="${entry.message}">message</span>
+                <button class="btn btn-secondary btn-sm" type="button" id="clear-display-btn" style="margin-left:auto">
+                    Anzeige leeren
+                </button>
             </div>
-        </div>
-    </div>
-</div>
 
-<script th:src="@{/js/logs.js}"></script>
+            <div class="log-container" id="log-container">
+                <!-- Initial logs -->
+                <div th:each="entry : ${logs}"
+                     th:classappend="'log-entry log-' + ${#strings.toLowerCase(entry.level)}">
+                    <span class="log-ts" th:text="${entry.timestamp}">00:00:00</span>
+                    <span class="log-level" th:text="${entry.level}">INFO</span>
+                    <span th:text="${entry.message}">message</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script th:src="@{/js/logs.js}"></script>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

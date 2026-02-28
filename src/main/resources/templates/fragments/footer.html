@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="footer" class="app-footer">
+    <div class="footer-inner">
+        © <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}"></span>
+        Tebrox Dev • Discord Roles Bot
+        <span class="footer-version">
+            v<span th:text="${@appVersion}">DEV</span>
+        </span>
+    </div>
+</footer>
+</body>
+</html>

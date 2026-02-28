@@ -56,7 +56,7 @@ public class SecurityConfiguration {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/logout", "/login").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/favicon.ico").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/static/favicon.ico").permitAll()
                 .requestMatchers("/api/logs/stream").authenticated()
                 .requestMatchers("/api/**").authenticated()
                 .requestMatchers("/dashboard/**", "/").authenticated()

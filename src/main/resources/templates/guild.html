@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Übersicht – ' + ${guildName} + ' – Roles Bot'">Server – Übersicht</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header('guild', ${guildId}, ${guildName})}"></div>
+
+    <main class="container">
+        <div class="breadcrumb">
+            <a href="/">← Alle Server</a>
+        </div>
+
+        <h2 th:text="${guildName}">Server</h2>
+        <p class="subtitle">
+            <span class="muted">Guild ID:</span> <code th:text="${guildId}">ID</code>
+            <span class="muted">• Mitglieder:</span> <span th:text="${memberCount}">0</span>
+            <span class="muted">• Buttons:</span> <span th:text="${buttonCount}">0</span>
+            <span class="muted">• Welcome:</span>
+            <span th:text="${welcomeEnabled == true ? 'Aktiv' : 'Deaktiviert'}">
+        </p>
+
+        <section class="card">
+            <h3>Konfiguration</h3>
+
+            <div class="form-actions" style="justify-content:flex-start; gap:0.75rem; flex-wrap:wrap;">
+                <a class="btn btn-primary" th:href="@{'/guild/' + ${guildId} + '/roles'}">Rollen</a>
+                <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/welcome'}">Welcome</a>
+            </div>
+        </section>
+
+        <section class="card">
+            <h3>Schnellaktionen</h3>
+            <div class="muted" style="margin-bottom:0.75rem;">Hilfreich nach Änderungen, wenn das Panel neu gepostet oder aktualisiert werden soll.</div>
+
+            <div class="form-actions" style="justify-content:flex-start; gap:0.75rem; flex-wrap:wrap;">
+                <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/roles/refresh'}">Panel aktualisieren</a>
+                <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/roles/publish'}">Panel neu posten</a>
+            </div>
+        </section>
+    </main>
+
+    <script th:src="@{/js/main.js}"></script>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
