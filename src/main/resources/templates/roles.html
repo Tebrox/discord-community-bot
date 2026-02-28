@@ -96,16 +96,16 @@
             <fieldset>
                 <legend>Button-Daten</legend>
                 <label>Button-ID (max. 100 Zeichen)</label>
-                <input type="text" name="id" id="btn-id" maxlength="100" required placeholder="z.B. role_btn_gaming"/>
+                <label for="btn-id"></label><input type="text" name="id" id="btn-id" maxlength="100" required placeholder="z.B. role_btn_gaming"/>
                 <br/><br/>
                 <div class="row">
                     <div>
                         <label>Label</label>
-                        <input type="text" name="label" id="btn-label" maxlength="80" required placeholder="z.B. Gaming"/>
+                        <label for="btn-label"></label><input type="text" name="label" id="btn-label" maxlength="80" required placeholder="z.B. Gaming"/>
                     </div>
                     <div>
                         <label>Style</label>
-                        <select name="style" id="btn-style">
+                        <label for="btn-style"></label><select name="style" id="btn-style">
                             <option value="PRIMARY">PRIMARY</option>
                             <option value="SECONDARY">SECONDARY</option>
                             <option value="SUCCESS">SUCCESS</option>
@@ -115,7 +115,7 @@
                 </div>
                 <br/>
                 <label>Discord Rollen-ID</label>
-                <input type="text" name="roleId" id="btn-roleId" required placeholder="z.B. 1234567890123456789"/>
+                <label for="btn-roleId"></label><input type="text" name="roleId" id="btn-roleId" required placeholder="z.B. 1234567890123456789"/>
                 <br/><br/>
                 <button class="btn btn-primary" type="submit">Speichern</button>
             </fieldset>
@@ -148,21 +148,8 @@
     </div>
 </div>
 
-<script th:inline="javascript">
-    // Pre-fill form if ?editId= is present
-    (function() {
-        const params = new URLSearchParams(location.search);
-        const editId = params.get('editId');
-        if (!editId) return;
-        const buttons = /*[[${cfg.buttons}]]*/ [];
-        const btn = buttons.find(b => b.id === editId);
-        if (!btn) return;
-        document.getElementById('btn-id').value = btn.id;
-        document.getElementById('btn-label').value = btn.label;
-        document.getElementById('btn-roleId').value = btn.roleId;
-        document.getElementById('btn-style').value = btn.style;
-    })();
-</script>
+<script id="buttons-json" type="application/json" th:text="${buttonsJson}"></script>
+<script th:src="@{/js/roles.js}"></script>
 <script th:src="@{/js/main.js}"></script>
 </body>
 </html>

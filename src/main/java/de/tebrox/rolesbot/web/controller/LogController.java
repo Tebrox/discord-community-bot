@@ -65,7 +65,7 @@ public class LogController {
                     emitter.send(SseEmitter.event().data(sb.toString()));
                 }
             } catch (IOException e) {
-                emitter.completeWithError(e);
+                emitter.complete();
             }
         }, 0, 2, TimeUnit.SECONDS);
 

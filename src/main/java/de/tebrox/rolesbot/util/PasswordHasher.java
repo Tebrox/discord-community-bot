@@ -9,12 +9,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class PasswordHasher {
 
     public static void main(String[] args) {
-        if (args.length < 1) {
-            System.err.println("Usage: PasswordHasher <password>");
+        if (args.length == 0 || args[0].isBlank()) {
+            System.err.println("Usage: java -cp rolesbot-x.x.x.jar de.tebrox.rolesbot.util.PasswordHasher <password>");
+            System.err.println("Minimum password length: 8 characters");
             System.exit(1);
         }
-        String hash = new BCryptPasswordEncoder(12).encode(args[0]);
-        System.out.println("BCrypt hash (paste into config.yml auth.passwordHashBcrypt):");
+
+        String password = args[0];
+        if (password.length() < 8) {
+            System.err.println("Password must be at least 8 characters long.");
+            System.exit(1);
+        }
+
+        // BCrypt strength 12 – OWASP recommended minimum
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        String hash = encoder.encode(password);
         System.out.println(hash);
     }
 }

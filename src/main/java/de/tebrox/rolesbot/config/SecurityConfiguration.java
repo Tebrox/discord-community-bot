@@ -106,7 +106,7 @@ public class SecurityConfiguration {
                 // HSTS: 1 year, includeSubDomains (was missing before)
                 .httpStrictTransportSecurity(hsts -> hsts
                     .includeSubDomains(true)
-                    .maxAgeInSeconds(31_536_000))
+                    .maxAgeInSeconds(31536000))
                 .contentTypeOptions(ct -> {})
             );
 

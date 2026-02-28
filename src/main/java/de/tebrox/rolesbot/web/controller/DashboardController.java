@@ -1,5 +1,7 @@
 package de.tebrox.rolesbot.web.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tebrox.rolesbot.config.GuildConfig;
 import de.tebrox.rolesbot.config.GuildConfigLoader;
 import de.tebrox.rolesbot.config.GuildConfigManager;
@@ -37,6 +39,8 @@ public class DashboardController {
     private final PanelAdminListener panelAdminListener;
     private final JDA jda;
 
+    private final ObjectMapper objectMapper;
+
     // ------------------------------------------------------------------ Dashboard
 
     @GetMapping("/")
@@ -60,11 +64,18 @@ public class DashboardController {
     // ------------------------------------------------------------------ Rollen / Buttons
 
     @GetMapping("/guild/{guildId}/roles")
-    public String rolesPage(@PathVariable String guildId, Model model) {
+    public String rolesPage(@PathVariable String guildId, Model model) throws JsonProcessingException {
         SnowflakeValidator.validate(guildId, "guildId");
         GuildConfig cfg = configManager.getConfig(guildId);
         Guild guild = jda.getGuildById(guildId);
         if (cfg == null || guild == null) return "redirect:/";
+
+        try {
+            model.addAttribute("buttonsJson", objectMapper.writeValueAsString(cfg.getButtons()));
+        } catch(Exception e) {
+            log.warn("[Dashboard] Failed to serialize buttons to JSON: {}", e.getMessage());
+            model.addAttribute("buttonsJson", "[]");
+        }
 
         // Ensure full member list is loaded before accessing getMembersWithRoles()
         // Timeout: 10 seconds. On failure a warning is shown in the UI.

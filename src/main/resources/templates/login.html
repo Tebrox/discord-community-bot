@@ -9,53 +9,18 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body class="login-body">
-<div class="login-container">
-    <div class="login-card">
-        <h1>🤖 RolesBot</h1>
-        <p class="muted">Admin-Dashboard</p>
-        <div id="error-msg" class="alert alert-error" style="display:none"></div>
-        <div class="form-group">
-            <label>Passwort</label>
-            <input type="password" id="password" placeholder="Passwort eingeben..." autofocus/>
+    <div class="login-container">
+        <div class="login-card">
+            <h1>🤖 RolesBot</h1>
+            <p class="muted">Admin-Dashboard</p>
+            <div id="error-msg" class="alert alert-error" style="display:none"></div>
+            <div class="form-group">
+                <label>Passwort</label>
+                <input type="password" id="password" placeholder="Passwort eingeben..." autofocus/>
+            </div>
+            <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">Anmelden</button>
         </div>
-        <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">Anmelden</button>
     </div>
-</div>
-<script th:inline="javascript">
-    const csrfToken = /*[[${_csrf.token}]]*/ '';
-    const csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
-
-    function doLogin() {
-        const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('error-msg');
-        errorDiv.style.display = 'none';
-
-        fetch('/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                [csrfHeader]: csrfToken
-            },
-            body: JSON.stringify({ password })
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = data.redirect || '/';
-            } else {
-                errorDiv.textContent = data.message || 'Fehler';
-                errorDiv.style.display = 'block';
-            }
-        })
-        .catch(() => {
-            errorDiv.textContent = 'Netzwerkfehler.';
-            errorDiv.style.display = 'block';
-        });
-    }
-
-    document.getElementById('password').addEventListener('keydown', e => {
-        if (e.key === 'Enter') doLogin();
-    });
-</script>
+    <script th:src="@{/js/login.js}"></script>
 </body>
 </html>

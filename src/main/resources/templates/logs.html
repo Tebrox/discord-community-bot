@@ -50,11 +50,14 @@
     <div class="card">
         <div class="log-toolbar">
             <span><span id="live-indicator"></span>Live</span>
-            <button class="filter-btn active" onclick="setFilter('ALL')">Alle</button>
-            <button class="filter-btn" onclick="setFilter('INFO')">INFO</button>
-            <button class="filter-btn" onclick="setFilter('WARN')">WARN</button>
-            <button class="filter-btn" onclick="setFilter('ERROR')">ERROR</button>
-            <button class="btn btn-secondary btn-sm" onclick="clearDisplay()" style="margin-left:auto">Anzeige leeren</button>
+            <button class="filter-btn active" type="button" data-level="ALL">Alle</button>
+            <button class="filter-btn" type="button" data-level="INFO">INFO</button>
+            <button class="filter-btn" type="button" data-level="WARN">WARN</button>
+            <button class="filter-btn" type="button" data-level="ERROR">ERROR</button>
+
+            <button class="btn btn-secondary btn-sm" type="button" id="clear-display-btn" style="margin-left:auto">
+                Anzeige leeren
+            </button>
         </div>
         <div class="log-container" id="log-container">
             <!-- Initial logs -->
@@ -68,54 +71,6 @@
     </div>
 </div>
 
-<script th:inline="javascript">
-    let currentFilter = 'ALL';
-    let offset = /*[[${#lists.size(logs)}]]*/ 0;
-    const container = document.getElementById('log-container');
-
-    function setFilter(level) {
-        currentFilter = level;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        applyFilter();
-    }
-
-    function applyFilter() {
-        container.querySelectorAll('.log-entry').forEach(el => {
-            if (currentFilter === 'ALL') {
-                el.style.display = '';
-            } else {
-                el.style.display = el.classList.contains('log-' + currentFilter.toLowerCase()) ? '' : 'none';
-            }
-        });
-    }
-
-    function clearDisplay() {
-        container.innerHTML = '';
-    }
-
-    function scrollToBottom() {
-        container.scrollTop = container.scrollHeight;
-    }
-
-    // Connect to SSE
-    const evtSource = new EventSource('/api/logs/stream?since=' + offset);
-    evtSource.onmessage = function(e) {
-        const html = e.data;
-        if (html.trim()) {
-            const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-            container.insertAdjacentHTML('beforeend', html);
-            // Count new entries
-            offset = container.querySelectorAll('.log-entry').length;
-            applyFilter();
-            if (wasAtBottom) scrollToBottom();
-        }
-    };
-    evtSource.onerror = function() {
-        document.getElementById('live-indicator').style.background = '#ed4245';
-    };
-
-    scrollToBottom();
-</script>
+<script th:src="@{/js/logs.js}"></script>
 </body>
 </html>
