@@ -1,0 +1,64 @@
+# ============================================================
+# RolesBot v4 – guilds.yml
+# Guild-spezifische Discord-Konfiguration
+# ============================================================
+# Guilds werden automatisch hinzugefügt, wenn der Bot einem Server beitritt.
+# Ersetze DEINE_GUILD_ID mit der echten Discord Server-ID.
+# Ersetze ROLE_ID_* mit echten Discord Rollen-IDs.
+# Ersetze CHANNEL_ID_* mit echten Discord Channel-IDs.
+# ============================================================
+
+guilds:
+  "DEINE_GUILD_ID":
+    panel:
+      title: "📣 Benachrichtigungs-Rollen"
+      requirePermission: "MANAGE_SERVER"
+      allowedChannelId: "CHANNEL_ID_ADMIN"
+      enforceChannelLock: false
+
+    buttons:
+      - id: "role_infos"
+        label: "📰 Infos"
+        roleId: "ROLE_ID_INFOS"
+        style: "PRIMARY"
+
+      - id: "role_updates"
+        label: "🔄 Updates"
+        roleId: "ROLE_ID_UPDATES"
+        style: "PRIMARY"
+
+      - id: "role_events"
+        label: "🎉 Events"
+        roleId: "ROLE_ID_EVENTS"
+        style: "SUCCESS"
+
+      - id: "role_umfragen"
+        label: "📊 Umfragen"
+        roleId: "ROLE_ID_UMFRAGEN"
+        style: "SECONDARY"
+
+    statusButton:
+      id: "status_meine_rollen"
+      label: "📋 Meine Rollen"
+      style: "SECONDARY"
+
+    # Optional: Explizites Layout (leer = Auto-Layout)
+    layout:
+      rows:
+        - ["role_infos", "role_updates", "role_events", "role_umfragen"]
+        - ["status_meine_rollen"]
+
+    welcome:
+      enabled: false
+      channelId: "CHANNEL_ID_WELCOME"
+      sendDm: false
+      deleteAfterSeconds: 0
+      onlyFirstJoin: true
+      message: ""
+      embed:
+        enabled: true
+        color: "#5865F2"
+        title: "Willkommen, {mention}!"
+        description: "**{user}** ist dem Server **{server}** beigetreten.\nMitglieder: **{memberCount}**"
+        footer: "User ID: {id}"
+        thumbnail: "{avatarUrl}"

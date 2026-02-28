@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: rolesbot
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  h2:
+    console:
+      enabled: false
+
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+
+# Discord bot token - override via DISCORD_TOKEN env var
+discord:
+  token: ${DISCORD_TOKEN}
+
+# Dashboard auth - override via env vars
+dashboard:
+  password-hash: ${DASHBOARD_PASSWORD_HASH}
+  max-login-attempts: 5
+  lockout-duration-minutes: 15
+
+logging:
+  level:
+    root: INFO
+    de.tebrox.rolesbot: INFO
+    net.dv8tion: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN

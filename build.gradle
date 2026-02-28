@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group   = 'de.rolesbot'
+version = '1.0.1'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JDA 5.x – check https://github.com/discord-jda/JDA/releases for latest patch
+    implementation 'net.dv8tion:JDA:5.1.0'
+
+    // SnakeYAML 2.x
+    implementation 'org.yaml:snakeyaml:2.2'
+
+    // Logging
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
+}
+
+jar {
+    manifest { attributes 'Main-Class': 'de.tebrox.rolesbot.Main' }
+}
+
+shadowJar {
+    archiveBaseName.set('rolesbot')
+    archiveClassifier.set('')
+    archiveVersion.set(version as String)
+    manifest { attributes 'Main-Class': 'de.tebrox.rolesbot.Main' }
+    mergeServiceFiles()
+}
+
+build.dependsOn shadowJar

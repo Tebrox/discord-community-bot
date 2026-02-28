@@ -1,0 +1,37 @@
+# ============================================================
+# RolesBot v4 – config.yml
+# Anwendungs-Konfiguration (Web, Auth, Datenbank)
+# ============================================================
+# Token IMMER über Environment Variable DISCORD_TOKEN setzen!
+# Niemals den Token in diese Datei schreiben.
+# ============================================================
+
+discord:
+  # Leer lassen – Token über DISCORD_TOKEN Environment Variable setzen (empfohlen)
+  token: ""
+
+web:
+  host: "127.0.0.1"   # Nur lokal, oder 0.0.0.0 für alle Interfaces
+  port: 8080
+  session:
+    secure: false       # true wenn hinter HTTPS-Reverse-Proxy
+    timeoutMinutes: 120
+
+auth:
+  # Hash erzeugen: java -cp rolesbot.jar de.tebrox.rolesbot.util.PasswordHasher DEIN_PASSWORT
+  passwordHashBcrypt: "$2a$12$ERSETZE_MICH_MIT_ECHTEM_BCRYPT_HASH"
+  maxFailedAttempts: 5
+  lockMinutes: 15
+
+database:
+  type: "h2"            # h2 (Standard) oder mysql
+
+  h2:
+    file: "./data/db"   # H2-Datenbankdatei relativ zum WorkingDirectory
+
+  mysql:
+    host: "127.0.0.1"
+    port: 3306
+    database: "rolesbot"
+    username: "rolesbot"
+    password: "DEIN_DB_PASSWORT"
