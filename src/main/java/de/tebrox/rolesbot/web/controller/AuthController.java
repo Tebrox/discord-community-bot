@@ -37,6 +37,9 @@ public class AuthController {
 
         return switch (result) {
             case SUCCESS -> {
+                HttpSession old = request.getSession(false);
+                if(old != null) old.invalidate();
+
                 HttpSession session = request.getSession(true);
                 session.setAttribute(SessionAuthFilter.SESSION_AUTH_KEY, true);
                 yield ResponseEntity.ok(Map.of("success", true, "redirect", "/"));
