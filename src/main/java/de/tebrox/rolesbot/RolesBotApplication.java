@@ -3,6 +3,7 @@ package de.tebrox.rolesbot;
 import de.tebrox.rolesbot.config.appconfig.AppConfig;
 import de.tebrox.rolesbot.config.appconfig.AppConfigHolder;
 import de.tebrox.rolesbot.config.appconfig.ConfigLoader;
+import org.hibernate.dialect.Dialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -66,12 +67,19 @@ public class RolesBotApplication {
             AppConfig.DatabaseConfig.MysqlConfig mysql = db.getMysql();
             if (mysql != null) {
                 String url = String.format(
-                        "jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8",
-                        mysql.getHost(), mysql.getPort(), mysql.getDatabase());
+                        "jdbc:mariadb://%s:%d/%s?useUnicode=true&characterEncoding=UTF-8",
+                        mysql.getHost(), mysql.getPort(), mysql.getDatabase()
+                );
+
                 props.put("spring.datasource.url", url);
                 props.put("spring.datasource.username", mysql.getUsername());
                 props.put("spring.datasource.password", mysql.getPassword());
-                props.put("spring.datasource.driver-class-name", "com.mysql.cj.jdbc.Driver");
+                props.put("spring.datasource.driver-class-name", "org.mariadb.jdbc.Driver");
+
+                props.put("spring.jpa.database-platform", "org.hibernate.dialect.MariaDBDialect");
+            } else {
+                // hilfreich: hart abbrechen statt “still” weiterlaufen
+                throw new IllegalStateException("database.type=mysql but database.mysql is missing in config.yml");
             }
         } else {
             AppConfig.DatabaseConfig.H2Config h2 = db.getH2();
