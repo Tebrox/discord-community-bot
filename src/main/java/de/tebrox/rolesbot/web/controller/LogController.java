@@ -17,11 +17,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Controller
-@RequiredArgsConstructor
 public class LogController {
 
     private final LogBuffer logBuffer;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private final ScheduledExecutorService scheduler;
+
+    public LogController(LogBuffer logBuffer, ScheduledExecutorService scheduler) {
+        this.logBuffer = logBuffer;
+        this.scheduler = scheduler;
+    }
 
     @GetMapping("/logs")
     public String logsPage(Model model) {

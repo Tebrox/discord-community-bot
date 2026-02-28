@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.utils.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -262,15 +264,24 @@ public class DashboardController {
      * @return true if loaded successfully, false on timeout/error
      */
     private boolean ensureMembersLoaded(Guild guild) {
+        Task<List<Member>> task = guild.loadMembers();
+        CompletableFuture<List<Member>> future = new CompletableFuture<>();
+
+        // Task -> Future bridgen
+        task.onSuccess(future::complete);
+        task.onError(future::completeExceptionally);
+
         try {
-            guild.loadMembers().get(10, TimeUnit.SECONDS);
+            future.get(10, TimeUnit.SECONDS);
             return true;
         } catch (TimeoutException e) {
+            // Task stoppen, damit nichts "hängen bleibt"
+            try { task.cancel(); } catch (Exception ignored) {}
             log.warn("[Dashboard] Member loading timed out for guild {} ({})", guild.getName(), guild.getId());
             return false;
         } catch (Exception e) {
             log.warn("[Dashboard] Failed to load members for guild {} ({}): {}",
-                     guild.getName(), guild.getId(), e.getMessage());
+                    guild.getName(), guild.getId(), e.getMessage());
             return false;
         }
     }

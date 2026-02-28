@@ -29,12 +29,7 @@ public class JdaConfiguration {
     @Bean
     public JDA jda(
             DiscordProperties discordProperties,
-            GuildConfigManager configManager,
-            GuildLifecycleListener lifecycleListener,
-            PanelAdminListener panelAdminListener,
-            RoleButtonsListener roleButtonsListener,
-            WelcomeListener welcomeListener,
-            ReloadListener reloadListener
+            GuildConfigManager configManager
     ) throws InterruptedException {
 
         log.info("[RolesBot] Initializing JDA (createLight + GUILD_MEMBERS + MemberCachePolicy.ALL)...");
@@ -57,13 +52,6 @@ public class JdaConfiguration {
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .setActivity(Activity.watching("Community"))
-                .addEventListeners(
-                        lifecycleListener,
-                        panelAdminListener,
-                        roleButtonsListener,
-                        welcomeListener,
-                        reloadListener
-                )
                 .build()
                 .awaitReady();
 

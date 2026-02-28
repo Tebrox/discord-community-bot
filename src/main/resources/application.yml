@@ -24,6 +24,11 @@ server:
   error:
     include-stacktrace: never
     include-message: never
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
 
 # Discord bot token - override via DISCORD_TOKEN env var
 discord:
