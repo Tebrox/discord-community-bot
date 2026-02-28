@@ -60,7 +60,10 @@
                 <tr th:each="btn : ${cfg.buttons}">
                     <td th:text="${btn.id}">id</td>
                     <td th:text="${btn.label}">label</td>
-                    <td><code th:text="${btn.roleId}">roleId</code></td>
+                    <td>
+                        <code th:text="${btn.roleId}">roleId</code>
+                        <span th:if="${roleFoundByButtonId[btn.id] != null and !roleFoundByButtonId[btn.id]}" class="badge badge-warn">⚠️ Rolle nicht gefunden</span>
+                    </td>
                     <td th:text="${btn.style}">PRIMARY</td>
                     <td>
                         <a class="btn btn-secondary btn-sm"

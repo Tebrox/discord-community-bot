@@ -1,4 +1,4 @@
-(function () {
+document.addEventListener("DOMContentLoaded", () => {
   // Pre-fill form if ?editId= is present
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("editId");
@@ -11,6 +11,7 @@
   try {
     buttons = JSON.parse(jsonEl.textContent || "[]");
   } catch (e) {
+    console.warn("Failed to parse buttons JSON", e);
     return;
   }
 
@@ -19,11 +20,11 @@
 
   const setVal = (id, val) => {
     const el = document.getElementById(id);
-    if (el) el.value = val ?? "";
+    if (el) el.value = (val ?? "");
   };
 
   setVal("btn-id", btn.id);
   setVal("btn-label", btn.label);
   setVal("btn-roleId", btn.roleId);
   setVal("btn-style", btn.style);
-})();
+});

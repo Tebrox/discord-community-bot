@@ -80,6 +80,7 @@ public class DashboardController {
         // Ensure full member list is loaded before accessing getMembersWithRoles()
         // Timeout: 10 seconds. On failure a warning is shown in the UI.
         boolean membersLoaded = ensureMembersLoaded(guild);
+        Map<String, Boolean> roleFoundByButtonId = new HashMap<>();
 
         List<Map<String, Object>> roleGroups = new ArrayList<>();
         for (GuildConfig.ButtonConfig btn : cfg.getButtons()) {
@@ -106,6 +107,7 @@ public class DashboardController {
                 group.put("roleFound", false);
                 group.put("members", List.of());
             }
+            roleFoundByButtonId.put(btn.getId(), role != null);
             roleGroups.add(group);
         }
 
@@ -114,6 +116,7 @@ public class DashboardController {
         model.addAttribute("cfg", cfg);
         model.addAttribute("roleGroups", roleGroups);
         model.addAttribute("statusButton", cfg.getStatusButton());
+        model.addAttribute("roleFoundByButtonId", roleFoundByButtonId);
         if (!membersLoaded) {
             model.addAttribute("memberWarning",
                 "⚠️ Mitgliederliste konnte nicht vollständig geladen werden (Timeout). " +
