@@ -542,3 +542,175 @@ code {
   margin-top: 0;
   border-top: none;
 }
+
+/* -------------------------
+   Welcome Embed Preview Modal
+   ------------------------- */
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 9999;
+}
+
+.modal-backdrop.is-open {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 640px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
+    overflow: hidden;
+}
+
+.modal-header, .modal-footer {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-footer {
+    border-bottom: none;
+    border-top: 1px solid var(--border);
+    justify-content: flex-end;
+}
+
+.modal-body {
+    padding: 16px;
+}
+
+.modal-close {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,.04);
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+/* "Discord-like" embed preview */
+.embed-preview {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(0,0,0,.18);
+    overflow: hidden;
+}
+
+.embed-preview-color {
+    width: 4px;
+    background: var(--primary);
+}
+
+.embed-preview-content {
+    padding: 12px 12px 10px 12px;
+}
+
+.embed-preview-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.embed-preview-description {
+    white-space: pre-wrap;
+    color: var(--text);
+    opacity: .92;
+    margin-bottom: 10px;
+}
+
+.embed-preview-footer {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.color-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.colorpicker-btn {
+    width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.modal.modal-sm {
+    max-width: 420px;
+}
+
+.colorpicker-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.colorpicker-row input[type="color"] {
+    width: 56px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    padding: 0;
+}
+
+.colorpicker-meta {
+    flex: 1;
+    display: grid;
+    gap: 6px;
+}
+
+.colorpresets {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.colorpreset {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--border);
+}
+
+.colorpreset[data-color="#5865F2"] { background: #5865F2; }
+.colorpreset[data-color="#57F287"] { background: #57F287; }
+.colorpreset[data-color="#FEE75C"] { background: #FEE75C; }
+.colorpreset[data-color="#ED4245"] { background: #ED4245; }
+.colorpreset[data-color="#EB459E"] { background: #EB459E; }
+.colorpreset[data-color="#FFFFFF"] { background: #FFFFFF; }

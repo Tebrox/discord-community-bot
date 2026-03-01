@@ -282,6 +282,7 @@ public class DashboardController {
                               @RequestParam(required = false) String embedDescription,
                               @RequestParam(required = false, defaultValue = "#5865F2") String embedColor,
                               @RequestParam(required = false) String embedFooter,
+                              @RequestParam(required = false) String embedAvatar,
                               RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
         try {
@@ -295,6 +296,7 @@ public class DashboardController {
             if (embedTitle != null) cfg.getWelcome().getEmbed().setTitle(embedTitle.trim());
             if (embedDescription != null) cfg.getWelcome().getEmbed().setDescription(embedDescription.trim());
             if (embedFooter != null) cfg.getWelcome().getEmbed().setFooter(embedFooter.trim());
+            if (embedAvatar != null) cfg.getWelcome().getEmbed().setThumbnail(embedAvatar.trim());
             cfg.getWelcome().getEmbed().setColor(embedColor);
 
             configManager.saveGuildConfig(guildId, cfg);

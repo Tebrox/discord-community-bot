@@ -48,6 +48,9 @@
 
             <section class="card">
                 <h3>Embed</h3>
+                <div class="card-actions">
+                    <button class="btn btn-secondary" type="button" id="welcomePreviewBtn">Vorschau</button>
+                </div>
 
                 <div class="form-group">
                     <label>
@@ -57,29 +60,34 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Embed-Titel</label>
+                    <label>Titel</label>
                     <input type="text" name="embedTitle" class="form-input" th:value="${wc.embed.title}" maxlength="256"/>
                 </div>
 
                 <div class="form-group">
-                    <label>Embed-Beschreibung</label>
+                    <label>Beschreibung</label>
                     <textarea name="embedDescription" rows="4" class="form-input" maxlength="4096" th:text="${wc.embed.description}"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Embed-Footer</label>
+                    <label>Footer</label>
                     <input type="text" name="embedFooter" class="form-input" th:value="${wc.embed.footer}" maxlength="2048" placeholder="z.B. User ID: {id}"/>
+                </div>
+
+                <div class="form-group">
+                    <label>Thumbnail</label>
+                    <input type="text" name="embedThumbnail" class="form-input" th:value="${wc.embed.thumbnail}" maxlength="2048" placeholder="z.B. {avatarUrl}" />
                 </div>
 
                 <div class="form-group" style="margin-bottom:0;">
                     <label>Farbe (Hex, z.B. #5865F2)</label>
-                    <input type="text" name="embedColor" class="form-input" th:value="${wc.embed.color}" placeholder="#5865F2"/>
+                    <input type="text" name="embedColor" id="embedColorInput" class="form-input" th:value="${wc.embed.color}" placeholder="#5865F2"/>
+                    <button class="btn btn-primary" type="button" id="embedColorPickerBtn" title="Farbe wählen">🎨</button>
                 </div>
             </section>
 
             <div class="form-actions">
                 <button class="btn btn-primary" type="submit">Speichern</button>
-                <a class="btn btn-secondary" th:href="@{'/guild/' + ${guildId} + '/roles'}">Rollen</a>
             </div>
         </form>
 
@@ -130,9 +138,75 @@
                 </tbody>
             </table>
         </section>
+        <!-- Embed Preview Modal -->
+        <div class="modal-backdrop" id="welcomePreviewModal" aria-hidden="true">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="welcomePreviewTitle">
+                <div class="modal-header">
+                    <h3 id="welcomePreviewTitle">Embed Vorschau</h3>
+                    <button type="button" class="modal-close" id="welcomePreviewCloseBtn" aria-label="Schließen">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="muted" style="margin-bottom: 10px;">
+                        Vorschau basiert auf den aktuellen Formularwerten (noch nicht gespeichert).
+                    </div>
+
+                    <div class="embed-preview">
+                        <div class="embed-preview-color" id="previewEmbedColor"></div>
+                        <div class="embed-preview-content">
+                            <div class="embed-preview-title" id="previewEmbedTitle"></div>
+                            <div class="embed-preview-description" id="previewEmbedDescription"></div>
+                            <div class="embed-preview-footer" id="previewEmbedFooter"></div>
+                        </div>
+                    </div>
+
+                    <div class="muted" style="margin-top: 12px;">
+                        Hinweis: Discord rendert Markdown/Links/Emojis je nach Client leicht unterschiedlich.
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary" type="button" id="welcomePreviewOkBtn">OK</button>
+                </div>
+            </div>
+        </div>
+        <!-- Color Picker Modal -->
+        <div class="modal-backdrop" id="embedColorModal" aria-hidden="true">
+            <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="embedColorTitle">
+                <div class="modal-header">
+                    <h3 id="embedColorTitle">Embed-Farbe wählen</h3>
+                    <button type="button" class="modal-close" id="embedColorCloseBtn" aria-label="Schließen">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="colorpicker-row">
+                        <input type="color" id="embedColorNativePicker" value="#5865F2">
+                        <div class="colorpicker-meta">
+                            <div class="muted">Hex</div>
+                            <input type="text" id="embedColorHex" placeholder="#5865F2">
+                        </div>
+                    </div>
+
+                    <div class="colorpresets">
+                        <button type="button" class="colorpreset" data-color="#5865F2" title="#5865F2"></button>
+                        <button type="button" class="colorpreset" data-color="#57F287" title="#57F287"></button>
+                        <button type="button" class="colorpreset" data-color="#FEE75C" title="#FEE75C"></button>
+                        <button type="button" class="colorpreset" data-color="#ED4245" title="#ED4245"></button>
+                        <button type="button" class="colorpreset" data-color="#EB459E" title="#EB459E"></button>
+                        <button type="button" class="colorpreset" data-color="#FFFFFF" title="#FFFFFF"></button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" id="embedColorCancelBtn">Abbrechen</button>
+                    <button class="btn btn-primary" type="button" id="embedColorApplyBtn">Übernehmen</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/welcome.js}"></script>
     <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>
