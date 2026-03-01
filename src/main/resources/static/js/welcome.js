@@ -65,6 +65,366 @@
     // For “#channelname” chips (plain)
     const channelNameSet = new Set(channelsArr.map(c => String(c.name).toLowerCase()));
 
+    // -----------------------------
+    // Discord-like autocomplete for <# (channels) and <@& / @ (roles)
+    // -----------------------------
+
+    function getCaretClientRect(el) {
+        const isTextArea = el.nodeName === "TEXTAREA";
+        const value = el.value ?? "";
+        const pos = el.selectionStart ?? value.length;
+
+        const style = window.getComputedStyle(el);
+        const elRect = el.getBoundingClientRect();
+
+        const mirror = document.createElement("div");
+        mirror.className = "mention-ac-mirror";
+
+        // Mirror must sit exactly where the element sits in the viewport
+        mirror.style.position = "fixed";
+        mirror.style.left = elRect.left + "px";
+        mirror.style.top = elRect.top + "px";
+        mirror.style.width = elRect.width + "px";
+        mirror.style.height = elRect.height + "px";
+
+        mirror.style.visibility = "hidden";
+        mirror.style.whiteSpace = isTextArea ? "pre-wrap" : "pre";
+        mirror.style.wordWrap = "break-word";
+        mirror.style.overflow = "hidden"; // important: don't create its own scrollbars
+
+        // Copy typography + box
+        mirror.style.fontFamily = style.fontFamily;
+        mirror.style.fontSize = style.fontSize;
+        mirror.style.fontWeight = style.fontWeight;
+        mirror.style.letterSpacing = style.letterSpacing;
+        mirror.style.lineHeight = style.lineHeight;
+        mirror.style.padding = style.padding;
+        mirror.style.border = style.border;
+        mirror.style.boxSizing = style.boxSizing;
+
+        // Also copy alignment-related styles that affect caret x-position
+        mirror.style.textAlign = style.textAlign;
+        mirror.style.direction = style.direction;
+
+        const before = value.substring(0, pos);
+        const after = value.substring(pos);
+
+        mirror.textContent = before;
+
+        const marker = document.createElement("span");
+        marker.textContent = "\u200b";
+        mirror.appendChild(marker);
+
+        const tail = document.createElement("span");
+        tail.textContent = after.length ? after.substring(0, 1) : ".";
+        tail.style.opacity = "0";
+        mirror.appendChild(tail);
+
+        document.body.appendChild(mirror);
+
+        // Sync scroll position for textarea/input (matters for long content)
+        mirror.scrollTop = el.scrollTop;
+        mirror.scrollLeft = el.scrollLeft;
+
+        const markerRect = marker.getBoundingClientRect();
+        document.body.removeChild(mirror);
+
+        return {
+            left: markerRect.left,
+            top: markerRect.top,
+            bottom: markerRect.bottom
+        };
+    }
+
+    function findTrigger(textBeforeCaret) {
+        // Find the most recent trigger among:
+        // 1) "<#query"
+        // 2) "<@&query"
+        // 3) "@query" (role autocomplete, Discord-like)
+        const candidates = [];
+
+        const mCh = textBeforeCaret.match(/<#[^\s>]*$/);
+        if (mCh) candidates.push({ type: "channel", start: textBeforeCaret.length - mCh[0].length, query: mCh[0].slice(2) });
+
+        const mRole = textBeforeCaret.match(/<@&[^\s>]*$/);
+        if (mRole) candidates.push({ type: "role", start: textBeforeCaret.length - mRole[0].length, query: mRole[0].slice(3) });
+
+        // Plain "@": avoid emails by requiring boundary before @, and stop at whitespace
+        const mAt = textBeforeCaret.match(/(^|[\s(>])@([^\s@]{0,32})$/);
+        if (mAt) {
+            const prefixLen = mAt[1].length;
+            const wholeLen = mAt[0].length;
+            candidates.push({
+                type: "roleAt",
+                start: textBeforeCaret.length - wholeLen + prefixLen,
+                query: mAt[2] || ""
+            });
+        }
+
+        if (!candidates.length) return null;
+        // Use the latest starting trigger
+        candidates.sort((a, b) => b.start - a.start);
+        return candidates[0];
+    }
+
+    function normalizeQuery(q) {
+        return (q ?? "").toLowerCase().replace(/[^a-z0-9 _-]/g, "");
+    }
+
+    function scoreItem(name, query) {
+        // Simple but effective scoring: prefix match > contains
+        const n = name.toLowerCase();
+        if (!query) return 1;
+        if (n.startsWith(query)) return 100;
+        const idx = n.indexOf(query);
+        if (idx >= 0) return 50 - idx;
+        return 0;
+    }
+
+    function setupMentionAutocomplete(el) {
+        if (!el) return;
+
+        const overlay = document.createElement("div");
+        overlay.className = "mention-ac";
+        overlay.style.display = "none";
+
+        overlay.style.position = "fixed";
+        overlay.style.zIndex = "99999";
+        overlay.style.background = "#0f1115";
+        overlay.style.border = "1px solid rgba(255,255,255,0.12)";
+        overlay.style.borderRadius = "10px";
+        overlay.style.boxShadow = "0 10px 30px rgba(0,0,0,0.45)";
+        overlay.style.minWidth = "260px";
+        overlay.style.maxHeight = "260px";
+        overlay.style.overflowY = "auto";
+        overlay.style.color = "#fff";
+
+        overlay.setAttribute("role", "listbox");
+        document.body.appendChild(overlay);
+
+        let openFor = null; // { type, start, query }
+        let items = [];
+        let active = 0;
+
+        function close() {
+            overlay.style.display = "none";
+            overlay.innerHTML = "";
+            openFor = null;
+            items = [];
+            active = 0;
+        }
+
+        function render() {
+            if (!openFor) return close();
+
+            overlay.innerHTML = "";
+
+            items.forEach((it, idx) => {
+                const row = document.createElement("div");
+                row.className = "mention-ac-item" + (idx === active ? " is-active" : "");
+                row.setAttribute("role", "option");
+                row.dataset.index = String(idx);
+
+                const icon = document.createElement("div");
+                icon.className = "mention-ac-icon";
+                icon.textContent = it.kind === "channel" ? "#" : "@";
+
+                const label = document.createElement("div");
+                label.className = "mention-ac-label";
+                label.textContent = it.label;
+
+                const meta = document.createElement("div");
+                meta.className = "mention-ac-meta";
+                meta.textContent = it.kind === "channel" ? "Channel" : "Rolle";
+
+                row.appendChild(icon);
+                row.appendChild(label);
+                row.appendChild(meta);
+
+                row.addEventListener("mouseenter", () => {
+                    active = idx;
+                    updateActive();
+                });
+
+                row.addEventListener("mousedown", (e) => {
+                    // prevent input losing focus
+                    e.preventDefault();
+                });
+
+                row.addEventListener("click", () => {
+                    applySelection(idx);
+                });
+
+                overlay.appendChild(row);
+            });
+
+            const caret = getCaretClientRect(el);
+
+            // kurz sichtbar machen, damit height gemessen werden kann
+            overlay.style.display = "block";
+            overlay.style.visibility = "hidden";
+
+            const overlayHeight = overlay.offsetHeight;
+            const overlayWidth = overlay.offsetWidth;
+
+            let left = caret.left;
+            let top;
+
+            // Prüfen ob genug Platz unterhalb ist
+            const spaceBelow = window.innerHeight - caret.bottom;
+            const spaceAbove = caret.top;
+
+            if (spaceBelow < overlayHeight + 10 && spaceAbove > overlayHeight + 10) {
+                // ➜ oberhalb anzeigen
+                top = caret.top - overlayHeight - 6;
+            } else {
+                // ➜ unterhalb anzeigen (Standard)
+                top = caret.bottom + 6;
+            }
+
+            // horizontal begrenzen
+            left = Math.min(left, window.innerWidth - overlayWidth - 10);
+
+            overlay.style.left = left + "px";
+            overlay.style.top = top + "px";
+            overlay.style.visibility = "visible";
+        }
+
+        function updateActive() {
+            const nodes = overlay.querySelectorAll(".mention-ac-item");
+            nodes.forEach((n, idx) => {
+                if (idx === active) n.classList.add("is-active");
+                else n.classList.remove("is-active");
+            });
+
+            const current = overlay.querySelector('.mention-ac-item.is-active');
+            if (current) {
+                current.scrollIntoView({ block: "nearest" });
+            }
+        }
+
+        function computeItems() {
+            const value = el.value ?? "";
+            const pos = el.selectionStart ?? value.length;
+            const before = value.substring(0, pos);
+
+            const trg = findTrigger(before);
+            if (!trg) return close();
+
+            const query = normalizeQuery(trg.query);
+
+            openFor = trg;
+
+            if (trg.type === "channel") {
+                const list = (channelsArr || []).map(ch => ({
+                    kind: "channel",
+                    id: String(ch.id),
+                    label: String(ch.name)
+                }));
+
+                items = list
+                    .map(it => ({ ...it, _score: scoreItem(it.label, query) }))
+                    .filter(it => it._score > 0)
+                    .sort((a, b) => b._score - a._score)
+
+            } else {
+                const list = (rolesArr || []).map(r => ({
+                    kind: "role",
+                    id: String(r.id),
+                    label: String(r.name)
+                }));
+
+                items = list
+                    .map(it => ({ ...it, _score: scoreItem(it.label, query) }))
+                    .filter(it => it._score > 0)
+                    .sort((a, b) => b._score - a._score)
+            }
+
+            active = 0;
+            if (!items.length) return close();
+            render();
+        }
+
+        function applySelection(index) {
+            if (!openFor) return;
+            const it = items[index];
+            if (!it) return;
+
+            const value = el.value ?? "";
+            const pos = el.selectionStart ?? value.length;
+
+            const start = openFor.start;
+            const beforeStart = value.substring(0, start);
+            const after = value.substring(pos);
+
+            let insert;
+            if (it.kind === "channel") {
+                insert = `<#${it.id}> `;
+            } else {
+                // roles: always insert as <@&id>
+                insert = `<@&${it.id}> `;
+            }
+
+            el.value = beforeStart + insert + after;
+
+            const newPos = (beforeStart + insert).length;
+            el.setSelectionRange(newPos, newPos);
+
+            // trigger input so preview updates
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+
+            close();
+            el.focus();
+        }
+
+        el.addEventListener("input", computeItems);
+
+        el.addEventListener("click", () => {
+            // reposition + recompute on caret move
+            if (overlay.style.display !== "none") computeItems();
+        });
+
+        el.addEventListener("scroll", () => {
+            if (overlay.style.display !== "none") render();
+        });
+
+        el.addEventListener("keydown", (e) => {
+            if (overlay.style.display === "none") return;
+
+            if (e.key === "Escape") {
+                e.preventDefault();
+                close();
+                return;
+            }
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                active = Math.min(active + 1, Math.min(items.length) - 1);
+                updateActive();
+                return;
+            }
+
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                active = Math.max(active - 1, 0);
+                updateActive();
+                return;
+            }
+
+            if (e.key === "Enter" || e.key === "Tab") {
+                e.preventDefault();
+                applySelection(active);
+                return;
+            }
+        });
+
+        document.addEventListener("mousedown", (e) => {
+            if (overlay.style.display === "none") return;
+            if (e.target === overlay || overlay.contains(e.target) || e.target === el) return;
+            close();
+        });
+    }
+
     function escapeHtml(s) {
         return String(s)
             .replaceAll("&", "&amp;")
@@ -264,6 +624,11 @@
                 if (modal?.classList.contains("is-open")) renderPreview();
             });
         });
+
+        setupMentionAutocomplete(document.querySelector('input[name="embedTitle"]'));
+        setupMentionAutocomplete(document.querySelector('textarea[name="embedDescription"]'));
+        setupMentionAutocomplete(document.querySelector('input[name="embedFooter"]'));
+        setupMentionAutocomplete(document.querySelector('input[name="embedThumbnail"]'));
     });
 
     // ---- Color Picker Modal

@@ -743,3 +743,82 @@ body.modal-open {
 .colorpreset[data-color="#ED4245"] { background: #ED4245; }
 .colorpreset[data-color="#EB459E"] { background: #EB459E; }
 .colorpreset[data-color="#FFFFFF"] { background: #FFFFFF; }
+
+/* -------------------------
+   Mention Autocomplete (Discord-like)
+   ------------------------- */
+
+.mention-ac {
+  position: fixed;
+  width: 320px;
+  max-height: 240px;
+  overflow: auto;
+  background: #111214;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+  z-index: 10000;
+  padding: 6px;
+}
+
+.mention-ac-item {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mention-ac-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.mention-ac-item.is-active {
+  background: rgba(88, 101, 242, 0.20);
+  border: 1px solid rgba(88, 101, 242, 0.35);
+}
+
+.mention-ac-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  font-weight: 800;
+  color: rgba(255,255,255,0.85);
+}
+
+.mention-ac-label {
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mention-ac-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+}
+
+.mention-ac-mirror {
+  /* mirror element for caret positioning */
+}
+
+.live-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sse-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
