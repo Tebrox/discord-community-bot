@@ -40,8 +40,13 @@ public class PanelAdminListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        String cmd = event.getName();
-        if (!cmd.equals("rolesetup") && !cmd.equals("rolesrepost")) return;
+        if (!event.getName().equals("roles")) return;
+
+        String sub = event.getSubcommandName();
+        if (sub == null) return;
+        if (!sub.equals("setup") && !sub.equals("repost")) return;
+
+        boolean repost = sub.equals("repost");
 
         Guild guild = event.getGuild();
         if (guild == null) {
@@ -70,7 +75,6 @@ public class PanelAdminListener extends ListenerAdapter {
         String safetyReport = RolesSafetyChecker.buildReport(guild, selfMember, cfg);
         MessageEmbed embed = PanelBuilder.buildEmbed(cfg);
         List<ActionRow> rows = PanelBuilder.buildActionRows(cfg);
-        boolean repost = cmd.equals("rolesrepost");
 
         Optional<PanelState> stateOpt = panelService.findState(guildId);
 

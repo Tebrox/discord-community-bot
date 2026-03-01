@@ -47,3 +47,5 @@ logging:
     net.dv8tion: WARN
     org.springframework.security: WARN
     org.hibernate: WARN
+  pattern:
+    console: "%d{HH:mm:ss} [%level] %msg%n"

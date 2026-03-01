@@ -31,7 +31,10 @@ public class ReloadListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("roles reload")) return;
+        if (!event.getName().equals("community")) return;
+
+        String sub = event.getSubcommandName();
+        if (sub == null || !sub.equals("reload")) return;
 
         Guild guild = event.getGuild();
         if (guild == null) {
