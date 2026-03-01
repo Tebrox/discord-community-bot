@@ -64,7 +64,7 @@ public class JdaConfiguration {
                         .setDefaultPermissions(DefaultMemberPermissions.DISABLED),
                 Commands.slash("rolesrepost", "Postet das Rollenpanel neu (mit Löschung des alten)")
                         .setDefaultPermissions(DefaultMemberPermissions.DISABLED),
-                Commands.slash("rolesreload", "Lädt guilds.yml neu ohne Neustart")
+                Commands.slash("rolesreload", "Leert den Cache und synchronisiert Guild-Configs aus der DB")
                         .setDefaultPermissions(DefaultMemberPermissions.DISABLED)
         ).queue();
 

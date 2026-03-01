@@ -55,8 +55,8 @@ public class ReloadListener extends ListenerAdapter {
             if (newCfg != null) {
                 newCfg.buttonById();
             }
-            logBuffer.info("[Reload] guilds.yml reloaded by " + event.getUser().getAsTag() + " in guild " + guildId);
-            event.reply("✅ `guilds.yml` erfolgreich neu geladen!").setEphemeral(true).queue();
+            logBuffer.info("[Reload] Cache cleared + reconciled from DB by " + event.getUser().getAsTag() + " in guild " + guildId);
+            event.reply("✅ Cache geleert & DB synchronisiert.").setEphemeral(true).queue();
         } catch (IllegalArgumentException e) {
             event.reply("❌ Konfigurationsfehler: " + e.getMessage()).setEphemeral(true).queue();
         } catch (Exception e) {

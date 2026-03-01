@@ -3,7 +3,6 @@ package de.tebrox.rolesbot.web.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tebrox.rolesbot.config.GuildConfig;
-import de.tebrox.rolesbot.config.GuildConfigLoader;
 import de.tebrox.rolesbot.config.GuildConfigManager;
 import de.tebrox.rolesbot.discord.listeners.PanelAdminListener;
 import de.tebrox.rolesbot.persistence.entity.WelcomedUser;
@@ -366,8 +365,14 @@ public class DashboardController {
     private GuildConfig deepCopy(String guildId) {
         GuildConfig original = configManager.getConfig(guildId);
         if (original == null) return null;
-        Map<String, Object> raw = GuildConfigLoader.guildToMap(original);
-        return GuildConfigLoader.parseGuild(raw);
+
+        try {
+            String json = objectMapper.writeValueAsString(original);
+            return objectMapper.readValue(json, GuildConfig.class);
+        }catch(Exception e) {
+            log.warn("[Dashboard] Failed to deep-copy GuildConfig for {}: {}", guildId, e.getMessage());
+            return original;
+        }
     }
 
     private void refreshPanel(String guildId) {
