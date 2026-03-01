@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -60,11 +61,17 @@ public class JdaConfiguration {
         configManager.reconcile(jda);
 
         jda.updateCommands().addCommands(
-                Commands.slash("roles setup", "Erstellt oder editiert das Rollenpanel")
+                Commands.slash("roles", "Rollenpanel verwalten")
+                        .addSubcommands(
+                                new SubcommandData("setup", "Erstellt oder editiert das Rollenpanel"),
+                                new SubcommandData("repost", "Postet das Rollenpanel neu (mit Löschung des alten)")
+                        )
                         .setDefaultPermissions(DefaultMemberPermissions.DISABLED),
-                Commands.slash("roles repost", "Postet das Rollenpanel neu (mit Löschung des alten)")
-                        .setDefaultPermissions(DefaultMemberPermissions.DISABLED),
-                Commands.slash("community reload", "Leert den Cache und synchronisiert Guild-Configs aus der DB")
+
+                Commands.slash("community", "CommunityBot verwalten")
+                        .addSubcommands(
+                                new SubcommandData("reload", "Leert den Cache und synchronisiert Guild-Configs aus der DB")
+                        )
                         .setDefaultPermissions(DefaultMemberPermissions.DISABLED)
         ).queue();
 

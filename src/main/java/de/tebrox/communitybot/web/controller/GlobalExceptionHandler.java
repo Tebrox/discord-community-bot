@@ -1,7 +1,9 @@
 package de.tebrox.communitybot.web.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,6 +17,11 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private static boolean isSseRequest(HttpServletRequest request) {
+        String accept = request.getHeader("Accept");
+        return (accept != null && accept.contains(MediaType.TEXT_EVENT_STREAM_VALUE)) || request.getRequestURI().startsWith("/api/logs/stream");
+    }
 
     @ExceptionHandler(AsyncRequestNotUsableException.class)
     public void handleAsyncNotUsable(AsyncRequestNotUsableException e) {
@@ -35,14 +42,22 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException e) {
+    public Object handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
         log.warn("[WebHandler] IllegalArgument: {}", e.getMessage());
+        if(isSseRequest(request)) {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
-    public String handleGeneral(Exception e, Model model) {
+    public Object handleGeneral(Exception e, Model model, HttpServletRequest request) {
         log.error("[WebHandler] Unexpected error: {}", e.getMessage());
+
+        if(isSseRequest(request)) {
+            return ResponseEntity.status(500).build();
+        }
+
         model.addAttribute("error", "Ein unerwarteter Fehler ist aufgetreten.");
         return "error";
     }
