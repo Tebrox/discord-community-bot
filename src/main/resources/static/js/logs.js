@@ -1,13 +1,33 @@
 (function () {
   let currentFilter = "ALL";
+  let autoScrollEnabled = true;
+
+  const MAX_ENTRIES = 2000;
+  const MAX_RECONNECT_DELAY = 20000;
 
   const container = document.getElementById("log-container");
+  const liveIndicator = document.getElementById("live-indicator");
+  const statusEl = document.getElementById("sse-status");
+  const autoScrollBtn = document.getElementById("auto-scroll-btn");
+
   if (!container) return;
 
-  const liveIndicator = document.getElementById("live-indicator");
+  let offset = container.querySelectorAll(".log-entry").length;
+  if (Number.isNaN(offset) || offset < 0) offset = 0;
 
-  let offset = parseInt(container.getAttribute("data-offset") || "0", 10);
-  if (Number.isNaN(offset)) offset = 0;
+  let evtSource = null;
+  let reconnectAttempt = 0;
+  let reconnectTimer = null;
+  let reconnectInterval = null;
+
+  function setStatus(text) {
+    if (statusEl) statusEl.textContent = text || "";
+  }
+
+  function setLive(ok) {
+    if (!liveIndicator) return;
+    liveIndicator.style.background = ok ? "#3ba55c" : "#ed4245";
+  }
 
   function applyFilter() {
     container.querySelectorAll(".log-entry").forEach(el => {
@@ -20,61 +40,141 @@
     });
   }
 
-  function setActive(btn) {
-    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    if (btn) btn.classList.add("active");
-  }
-
-  // Buttons binden
-  document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      currentFilter = btn.getAttribute("data-level") || "ALL";
-      setActive(btn);
-      applyFilter();
-    });
-  });
-
-  // Clear display button
-  const clearBtn = document.getElementById("clear-display-btn");
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      container.innerHTML = "";
-      // Offset neu setzen, sonst stimmt "since" nicht mehr zur Anzeige.
-      // Da dein SSE nur neue Einträge anhängt, ist es am sinnvollsten,
-      // den Offset auf 0 zu setzen, damit wieder sauber gezählt wird.
-      offset = 0;
-      applyFilter();
-    });
-  }
-
   function scrollToBottom() {
     container.scrollTop = container.scrollHeight;
   }
 
-  // SSE
-  const evtSource = new EventSource("/api/logs/stream?since=" + encodeURIComponent(offset));
-  evtSource.onmessage = (e) => {
-    const html = e.data || "";
-    if (!html.trim()) return;
+  function isAtBottom() {
+    return (container.scrollHeight - container.scrollTop)
+      <= (container.clientHeight + 50);
+  }
 
-    const wasAtBottom = (container.scrollHeight - container.scrollTop) <= (container.clientHeight + 50);
-    container.insertAdjacentHTML("beforeend", html);
+  function trimIfNeeded() {
+    const entries = container.querySelectorAll(".log-entry");
+    const extra = entries.length - MAX_ENTRIES;
+    if (extra <= 0) return;
 
-    offset = container.querySelectorAll(".log-entry").length;
+    for (let i = 0; i < extra; i++) {
+      entries[i].remove();
+    }
+  }
 
-    applyFilter();
-    if (wasAtBottom) scrollToBottom();
-  };
+  function clearReconnectTimers() {
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    if (reconnectInterval) clearInterval(reconnectInterval);
+    reconnectTimer = null;
+    reconnectInterval = null;
+  }
 
-  evtSource.onerror = () => {
-    if (liveIndicator) liveIndicator.style.background = "#ed4245";
-  };
+  function scheduleReconnect() {
+    reconnectAttempt++;
+    const delay = Math.min(
+      MAX_RECONNECT_DELAY,
+      1000 * Math.pow(2, Math.min(5, reconnectAttempt - 1))
+    );
 
-  window.addEventListener("beforeunload", () => {
-    try { evtSource.close(); } catch (e) {}
+    let seconds = Math.ceil(delay / 1000);
+    setStatus(`Reconnect in ${seconds}s…`);
+
+    reconnectInterval = setInterval(() => {
+      seconds--;
+      if (seconds > 0) {
+        setStatus(`Reconnect in ${seconds}s…`);
+      }
+    }, 1000);
+
+    reconnectTimer = setTimeout(() => {
+      clearReconnectTimers();
+      connect();
+    }, delay);
+  }
+
+  function connect() {
+    try { if (evtSource) evtSource.close(); } catch (e) {}
+
+    setLive(true);
+    setStatus("Connecting…");
+
+    evtSource = new EventSource("/api/logs/stream?since=" + offset);
+
+    evtSource.onopen = () => {
+      reconnectAttempt = 0;
+      setLive(true);
+      setStatus("Live");
+    };
+
+    evtSource.addEventListener("log", (e) => {
+      const html = e?.data || "";
+      if (!html.trim()) return;
+
+      const wasAtBottom = isAtBottom();
+
+      container.insertAdjacentHTML("beforeend", html);
+
+      const added = (html.match(/class=['"]log-entry\b/g) || []).length;
+      offset += added;
+
+      trimIfNeeded();
+      applyFilter();
+
+      if (autoScrollEnabled && wasAtBottom) {
+        scrollToBottom();
+      }
+    });
+
+    evtSource.addEventListener("ping", () => {});
+
+    evtSource.onerror = () => {
+      setLive(false);
+      setStatus("Disconnected");
+      try { evtSource.close(); } catch (e) {}
+      scheduleReconnect();
+    };
+  }
+
+  // Filter Buttons
+  document.querySelectorAll(".filter-btn[data-level]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentFilter = btn.getAttribute("data-level") || "ALL";
+      document.querySelectorAll(".filter-btn")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilter();
+    });
   });
 
-  // initial
+  // Auto-Scroll Toggle
+  if (autoScrollBtn) {
+    autoScrollBtn.addEventListener("click", () => {
+      autoScrollEnabled = !autoScrollEnabled;
+      autoScrollBtn.textContent = autoScrollEnabled
+        ? "Auto-Scroll: AN"
+        : "Auto-Scroll: AUS";
+      if (autoScrollEnabled) scrollToBottom();
+    });
+  }
+
+  // Clear Button
+  const clearBtn = document.getElementById("clear-display-btn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      container.innerHTML = "";
+
+      fetch("/api/logs/count", { cache: "no-store" })
+        .then(r => r.ok ? r.text() : "0")
+        .then(t => {
+          const n = parseInt(t, 10);
+          if (!Number.isNaN(n)) offset = n;
+        });
+    });
+  }
+
+  window.addEventListener("beforeunload", () => {
+    try { if (evtSource) evtSource.close(); } catch (e) {}
+    clearReconnectTimers();
+  });
+
   applyFilter();
   scrollToBottom();
+  connect();
 })();

@@ -38,9 +38,10 @@ public class LogController {
     @GetMapping(value = "/api/logs/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @ResponseBody
     public SseEmitter streamLogs(@RequestParam(defaultValue = "0") int since) {
-        SseEmitter emitter = new SseEmitter(60_000L);
+        SseEmitter emitter = new SseEmitter(0L);
 
-        int[] offset = {since};
+        if(since < 0) since = 0;
+        int[] offset = { since };
 
         var future = scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -60,10 +61,18 @@ public class LogController {
                           .append("</div>");
                     }
                     offset[0] += newEntries.size();
-                    emitter.send(SseEmitter.event().data(sb.toString()));
+                    emitter.send(SseEmitter.event()
+                            .name("log")
+                            .data(sb.toString()));
+                } else {
+                    emitter.send(SseEmitter.event()
+                            .name("ping")
+                            .data(Long.toString(System.currentTimeMillis())));
                 }
             } catch (IOException e) {
                 emitter.complete();
+            } catch(Exception e) {
+                emitter.completeWithError(e);
             }
         }, 0, 2, TimeUnit.SECONDS);
 
