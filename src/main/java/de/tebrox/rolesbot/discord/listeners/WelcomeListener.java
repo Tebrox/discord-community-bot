@@ -62,6 +62,7 @@ public class WelcomeListener extends ListenerAdapter {
         String tag         = user.getAsTag();
         String memberId    = user.getId();
         String serverName  = guild.getName();
+        String serverId    = guild.getId();
         String memberCount = String.valueOf(guild.getMemberCount());
         String avatarUrl   = user.getEffectiveAvatarUrl();
 
@@ -85,9 +86,25 @@ public class WelcomeListener extends ListenerAdapter {
                 eb.setColor(new Color(0x5865F2));
             }
 
+            log.info("[WelcomeListener] Member joined: {} ({}) in guild {} ({})",
+                    tag,
+                    memberId,
+                    serverName,
+                    serverId);
+
             channel.sendMessageEmbeds(eb.build()).queue(
-                    msg -> scheduleDelete(msg, wc.getDeleteAfterSeconds()),
-                    err -> log.error("[WelcomeListener] Failed to send welcome: {}", err.getMessage())
+                    msg -> {
+                        log.info("[WelcomeListener] Welcome message sent for user {} in channel {} (msgId={})",
+                                memberId,
+                                channel.getId(),
+                                msg.getId());
+
+                        scheduleDelete(msg, wc.getDeleteAfterSeconds());
+                    },
+                    err -> log.error("[WelcomeListener] Failed to send welcome for user {} in guild {}: {}",
+                            memberId,
+                            guild.getId(),
+                            err.getMessage())
             );
         } else if (wc.getMessage() != null && !wc.getMessage().isBlank()) {
             String text = resolve(wc.getMessage(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl);
