@@ -653,10 +653,39 @@ body.modal-open {
     color: var(--text-muted);
 }
 
+.embed-preview-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 10px;
+    float: right;
+    margin-left: 12px;
+    border: 1px solid var(--border);
+}
+
+/* Preview "Discord-ish" formatting */
+.embed-preview .mention {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgba(88, 101, 242, 0.18);
+  border: 1px solid rgba(88, 101, 242, 0.35);
+  color: #cfd4ff;
+  font-weight: 600;
+}
+
+.embed-preview .mention { background: rgba(88, 101, 242, 0.14); }
+
+
 .color-input-row {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+.color-input-row .form-input {
+    flex: 1;
+    min-width: 0;
 }
 
 .colorpicker-btn {

@@ -39,6 +39,127 @@
         return norm || "#5865F2";
     }
 
+    const PREVIEW_AVATAR = "https://cdn.discordapp.com/embed/avatars/4.png";
+
+    function readJsonFromDom(id) {
+        const el = document.getElementById(id);
+        if (!el) return [];
+        try { return JSON.parse(el.textContent || "[]"); }
+        catch { return []; }
+    }
+
+    function readTextFromDom(id, fallback) {
+        const el = document.getElementById(id);
+        if (!el) return fallback;
+        const t = (el.textContent || "").trim();
+        return t.length ? t : fallback;
+    }
+
+    const channelsArr = readJsonFromDom("welcomeChannelsJson");
+    const rolesArr = readJsonFromDom("welcomeRolesJson");
+    const PREVIEW_SERVER = readTextFromDom("welcomeServerName", "Preview Server")
+
+    const channelById = new Map(channelsArr.map(c => [String(c.id), String(c.name)]));
+    const roleById = new Map(rolesArr.map(r => [String(r.id), String(r.name)]));
+
+    // For “#channelname” chips (plain)
+    const channelNameSet = new Set(channelsArr.map(c => String(c.name).toLowerCase()));
+
+    function escapeHtml(s) {
+        return String(s)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    /**
+     * Converts text to safe HTML and applies Discord-like preview formatting:
+     * - placeholders replaced with sample values
+     * - channel/user/role mentions shown as "chips"
+     * - links clickable
+     * - inline code styled
+     */
+    function previewFormatToHtml(text) {
+        // 1) escape first to prevent HTML injection
+        let s = escapeHtml(text ?? "");
+
+        // 2) sample placeholder values for preview
+        const sample = {
+            "{mention}": "@User",
+            "{user}": "User",
+            "{tag}": "User#1234",
+            "{id}": "123456789012345678",
+            "{server}": PREVIEW_SERVER,
+            "{memberCount}": "1337",
+            "{avatarUrl}": PREVIEW_AVATAR,
+            "{avatar}": PREVIEW_AVATAR // user requested placeholder
+        };
+
+        // replace placeholders (case-insensitive for convenience)
+        for (const [k, v] of Object.entries(sample)) {
+            const re = new RegExp(escapeHtml(k).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+            s = s.replace(re, escapeHtml(v));
+        }
+
+        // 3) Discord channel mention <#id> -> #name
+        s = s.replace(/&lt;#([0-9]{5,25})&gt;/g, (_, id) => {
+            const name = channelById.get(String(id));
+            const shown = name ? `#${escapeHtml(name)}` : `#unknown-${id}`;
+            return `<span class="mention">${shown}</span>`;
+        });
+
+        // 4) Discord role mention <@&id> -> @role-id
+        s = s.replace(/&lt;@&amp;([0-9]{5,25})&gt;/g, (_, id) => {
+            const name = roleById.get(String(id));
+            const shown = name ? `@${escapeHtml(name)}` : `@role-${id}`;
+            return `<span class="mention">${shown}</span>`;
+        });
+
+        // 5) Discord user mention <@id> / <@!id> -> @User
+        s = s.replace(/&lt;@!?([0-9]{5,25})&gt;/g, (_, id) => {
+            return `<span class="mention">@user-${id}</span>`;
+        });
+
+        // Also style plain "@name" as mention chip (best-effort).
+        // Avoid emails like test@example.com by requiring start/space/punctuation prefix.
+        s = s.replace(/(^|[\s(>])@([^\s@]{2,32})/g, (full, prefix, name) => {
+            // skip if looks like email domain part after @ (contains '.')
+            if (name.includes(".")) return full;
+            return `${prefix}<span class="mention user">@${escapeHtml(name)}</span>`;
+        });
+
+        // Also render plain "#channelname" as a chip (best effort).
+        // Avoid turning hex colors like #5865F2 into chips.
+        s = s.replace(/(^|[\s(>])#([a-zA-Z0-9_-]{1,100})/g, (full, prefix, name) => {
+            const lower = String(name).toLowerCase();
+
+            // don't treat hex colors as channels
+            const isHex = /^[0-9a-fA-F]{3}$/.test(name) || /^[0-9a-fA-F]{6}$/.test(name);
+            if (isHex) return full;
+
+            if (!channelNameSet.has(lower)) return full;
+
+            return `${prefix}<span class="mention channel">#${escapeHtml(name)}</span>`;
+        });
+
+        // 6) Links (safe: we already escaped)
+        s = s.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+            return `<a class="preview-link" href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        });
+
+        // 7) Inline code: `code`
+        s = s.replace(/`([^`]+)`/g, (_, code) => {
+            return `<code class="preview-code">${escapeHtml(code)}</code>`;
+        });
+
+        // 8) line breaks
+        s = s.replaceAll("\n", "<br>");
+
+        return s;
+    }
+
     function renderPreview() {
         const embedEnabled = document.querySelector('input[name="embedEnabled"]')?.checked ?? false;
 
@@ -60,9 +181,25 @@
             return;
         }
 
-        safeText(previewTitle, title.trim() || "Kein Titel");
-        safeText(previewDesc, desc.trim() || "Keine Beschreibung");
-        safeText(previewFooter, footer.trim());
+        previewTitle.innerHTML = previewFormatToHtml(title.trim() || "Kein Titel");
+        previewDesc.innerHTML = previewFormatToHtml(desc.trim() || "Keine Beschreibung");
+        previewFooter.innerHTML = previewFormatToHtml(footer.trim());
+
+        const thumb = document.querySelector('input[name="embedThumbnail"]')?.value ?? "";
+        const previewThumb = $("previewEmbedThumbnail");
+        if (previewThumb) {
+            // For src we need a raw URL (no HTML). Keep it simple & predictable.
+            const raw = (thumb.trim() || "")
+                .replace(/{avatar}/gi, PREVIEW_AVATAR)
+                .replace(/{avatarUrl}/gi, PREVIEW_AVATAR);
+            const url = raw.startsWith("http") ? raw : "";
+            if (url) {
+                previewThumb.src = url;
+                previewThumb.style.display = "block";
+            } else {
+                previewThumb.style.display = "none";
+            }
+        }
 
         const norm = normalizeHexColor(color);
         if (previewColor) previewColor.style.background = norm || "var(--primary)";
@@ -113,7 +250,8 @@
             'input[name="embedTitle"]',
             'textarea[name="embedDescription"]',
             'input[name="embedFooter"]',
-            'input[name="embedColor"]'
+            'input[name="embedColor"]',
+            'input[name="embedThumbnail"]'
         ];
 
         watchedSelectors.forEach(sel => {

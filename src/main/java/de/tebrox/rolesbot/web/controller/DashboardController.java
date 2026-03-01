@@ -265,10 +265,33 @@ public class DashboardController {
 
         List<WelcomedUser> welcomedUsers = welcomeTrackingService.getWelcomedUsers(guildId);
 
+        List<Map<String, String>> channels = guild.getTextChannels().stream()
+                .map(ch -> Map.of("id", ch.getId(), "name", ch.getName()))
+                .toList();
+
+        List<Map<String, String>> roles = guild.getRoles().stream()
+                .map(r -> Map.of("id", r.getId(), "name", r.getName()))
+                .toList();
+
+        String channelsJson;
+        try { channelsJson = objectMapper.writeValueAsString(channels); }
+        catch (Exception e) { channelsJson = "[]"; }
+
+        String rolesJson;
+        try { rolesJson = objectMapper.writeValueAsString(roles); }
+        catch (Exception e) { rolesJson = "[]"; }
+
         model.addAttribute("guildId", guildId);
         model.addAttribute("guildName", guild.getName());
         model.addAttribute("wc", cfg.getWelcome());
         model.addAttribute("welcomedUsers", welcomedUsers);
+
+        model.addAttribute("channels", channels);
+        model.addAttribute("channelsJson", channelsJson);
+
+        model.addAttribute("roles", roles);
+        model.addAttribute("rolesJson", rolesJson);
+
         return "welcome";
     }
 

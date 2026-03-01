@@ -36,22 +36,29 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Welcome Channel-ID</label>
-                    <input type="text" name="channelId" class="form-input" th:value="${wc.channelId}" placeholder="1234567890123456789"/>
+                    <label>Welcome Channel</label>
+                    <label>
+                        <select name="channelId" class="form-input">
+                            <option value="" th:selected="${wc.channelId == null || wc.channelId.isBlank()}">-- Kanal wählen --</option>
+                            <option th:each="ch : ${channels}"
+                                    th:value="${ch.id}"
+                                    th:text="'#' + ${ch.name}"
+                                    th:selected="${wc.channelId} == ${ch.id}">
+                            </option>
+                        </select>
+                    </label>
                 </div>
 
                 <div class="form-group" style="margin-bottom:0;">
                     <label>Nachricht nach X Sekunden löschen (0 = nie)</label>
-                    <input type="number" name="deleteAfterSeconds" class="form-input" th:value="${wc.deleteAfterSeconds}" min="0"/>
+                    <label>
+                        <input type="number" name="deleteAfterSeconds" class="form-input" th:value="${wc.deleteAfterSeconds}" min="0"/>
+                    </label>
                 </div>
             </section>
 
             <section class="card">
                 <h3>Embed</h3>
-                <div class="card-actions">
-                    <button class="btn btn-secondary" type="button" id="welcomePreviewBtn">Vorschau</button>
-                </div>
-
                 <div class="form-group">
                     <label>
                         <input type="checkbox" name="embedEnabled" th:checked="${wc.embed.enabled}"/>
@@ -61,34 +68,60 @@
 
                 <div class="form-group">
                     <label>Titel</label>
-                    <input type="text" name="embedTitle" class="form-input" th:value="${wc.embed.title}" maxlength="256"/>
+                    <label>
+                        <input type="text" name="embedTitle" class="form-input" th:value="${wc.embed.title}" maxlength="256"/>
+                    </label>
                 </div>
 
                 <div class="form-group">
                     <label>Beschreibung</label>
-                    <textarea name="embedDescription" rows="4" class="form-input" maxlength="4096" th:text="${wc.embed.description}"></textarea>
+                    <label>
+                        <textarea name="embedDescription" rows="4" class="form-input" maxlength="4096" th:text="${wc.embed.description}"></textarea>
+                    </label>
                 </div>
 
                 <div class="form-group">
                     <label>Footer</label>
-                    <input type="text" name="embedFooter" class="form-input" th:value="${wc.embed.footer}" maxlength="2048" placeholder="z.B. User ID: {id}"/>
+                    <label>
+                        <input type="text" name="embedFooter" class="form-input" th:value="${wc.embed.footer}" maxlength="2048" placeholder="z.B. User ID: {id}"/>
+                    </label>
                 </div>
 
                 <div class="form-group">
                     <label>Thumbnail</label>
-                    <input type="text" name="embedThumbnail" class="form-input" th:value="${wc.embed.thumbnail}" maxlength="2048" placeholder="z.B. {avatarUrl}" />
+                    <label>
+                        <input type="text" name="embedThumbnail" class="form-input" th:value="${wc.embed.thumbnail}" maxlength="2048" placeholder="z.B. {avatarUrl}" />
+                    </label>
                 </div>
 
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>Farbe (Hex, z.B. #5865F2)</label>
-                    <input type="text" name="embedColor" id="embedColorInput" class="form-input" th:value="${wc.embed.color}" placeholder="#5865F2"/>
-                    <button class="btn btn-primary" type="button" id="embedColorPickerBtn" title="Farbe wählen">🎨</button>
+                <div class="form-group">
+                    <label>Farbe</label>
+
+                    <div class="color-input-row">
+                        <input type="text"
+                               name="embedColor"
+                               id="embedColorInput"
+                               class="form-input"
+                               th:value="${wc.embed.color}"
+                               placeholder="#5865F2"/>
+
+                        <button class="btn btn-secondary"
+                                type="button"
+                                id="embedColorPickerBtn"
+                                title="Farbe wählen">
+                            🎨
+                        </button>
+                    </div>
+
+                    <small>Hex-Farbe, z. B. #5865F2</small>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" type="button" id="welcomePreviewBtn">Vorschau</button>
+                    <button class="btn btn-primary" type="submit">Speichern</button>
                 </div>
             </section>
 
-            <div class="form-actions">
-                <button class="btn btn-primary" type="submit">Speichern</button>
-            </div>
+
         </form>
 
         <section class="card">
@@ -154,6 +187,10 @@
                     <div class="embed-preview">
                         <div class="embed-preview-color" id="previewEmbedColor"></div>
                         <div class="embed-preview-content">
+                            <img id="previewEmbedThumbnail"
+                                 class="embed-preview-thumb"
+                                 alt=""
+                                 style="display:none;">
                             <div class="embed-preview-title" id="previewEmbedTitle"></div>
                             <div class="embed-preview-description" id="previewEmbedDescription"></div>
                             <div class="embed-preview-footer" id="previewEmbedFooter"></div>
@@ -180,10 +217,10 @@
 
                 <div class="modal-body">
                     <div class="colorpicker-row">
-                        <input type="color" id="embedColorNativePicker" value="#5865F2">
+                        <label for="embedColorNativePicker"></label><input type="color" id="embedColorNativePicker" value="#5865F2">
                         <div class="colorpicker-meta">
                             <div class="muted">Hex</div>
-                            <input type="text" id="embedColorHex" placeholder="#5865F2">
+                            <label for="embedColorHex"></label><input type="text" id="embedColorHex" placeholder="#5865F2">
                         </div>
                     </div>
 
@@ -206,6 +243,9 @@
     </main>
 
     <script th:src="@{/js/main.js}"></script>
+    <script id="welcomeChannelsJson" type="application/json" th:utext="${channelsJson}">[]</script>
+    <script id="welcomeRolesJson" type="application/json" th:utext="${rolesJson}">[]</script>
+    <script id="welcomeServerName" type="application/json" th:utext="${guildName}">"Preview Server"</script>
     <script th:src="@{/js/welcome.js}"></script>
     <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
