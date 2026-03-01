@@ -1,6 +1,6 @@
 spring:
   application:
-    name: rolesbot
+    name: communitybot
 
   jpa:
     hibernate:
@@ -43,7 +43,7 @@ dashboard:
 logging:
   level:
     root: INFO
-    de.tebrox.rolesbot: INFO
+    de.tebrox.communitybot: INFO
     net.dv8tion: WARN
     org.springframework.security: WARN
     org.hibernate: WARN

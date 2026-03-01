@@ -60,5 +60,5 @@ jar {
 }
 
 bootJar {
-    archiveFileName.set("rolesbot-${project.version}.jar")
+    archiveFileName.set("CommunityBot-${project.version}.jar")
 }
