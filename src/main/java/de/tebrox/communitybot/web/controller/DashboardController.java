@@ -8,6 +8,8 @@ import de.tebrox.communitybot.discord.listeners.PanelAdminListener;
 import de.tebrox.communitybot.persistence.entity.WelcomedUser;
 import de.tebrox.communitybot.service.WelcomeTrackingService;
 import de.tebrox.communitybot.util.SnowflakeValidator;
+import de.tebrox.communitybot.web.discord.DashboardDiscordService;
+import de.tebrox.communitybot.web.panel.PanelRefresher;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -35,21 +37,24 @@ public class DashboardController {
 
     private final GuildConfigManager configManager;
     private final WelcomeTrackingService welcomeTrackingService;
-    private final PanelAdminListener panelAdminListener;
-    private final JDA jda;
+    private final DashboardDiscordService discord;
+    private final PanelRefresher panelRefresher;
 
     private final ObjectMapper objectMapper;
 
     @GetMapping("/guild/{guildId}")
     public String guildOverview(@PathVariable String guildId, Model model) {
         SnowflakeValidator.validate(guildId, "guildId");
-        Guild guild = jda.getGuildById(guildId);
+
+        var guildOpt = discord.getGuild(guildId);
         GuildConfig cfg = configManager.getConfig(guildId);
-        if (guild == null || cfg == null) return "redirect:/";
+        if (guildOpt.isEmpty() || cfg == null) return "redirect:/";
+
+        var guild = guildOpt.get();
 
         model.addAttribute("guildId", guildId);
-        model.addAttribute("guildName", guild.getName());
-        model.addAttribute("memberCount", guild.getMemberCount());
+        model.addAttribute("guildName", guild.name());
+        model.addAttribute("memberCount", guild.memberCount());
         model.addAttribute("cfg", cfg);
         model.addAttribute("buttonCount", cfg.getButtons() != null ? cfg.getButtons().size() : 0);
         model.addAttribute("welcomeEnabled", cfg.getWelcome() != null && cfg.getWelcome().isEnabled());
@@ -60,13 +65,13 @@ public class DashboardController {
 
     @GetMapping("/legacy-dashboard")
     public String legacy_dashboard(Model model) {
-        List<Guild> guilds = jda.getGuilds();
+        var guilds = discord.listGuilds();
         List<Map<String, Object>> guildData = new ArrayList<>();
-        for (Guild guild : guilds) {
+        for (var guild : guilds) {
             Map<String, Object> data = new LinkedHashMap<>();
-            data.put("id", guild.getId());
-            data.put("name", guild.getName());
-            GuildConfig cfg = configManager.getConfig(guild.getId());
+            data.put("id", guild.id());
+            data.put("name", guild.name());
+            GuildConfig cfg = configManager.getConfig(guild.id());
             data.put("buttonCount", cfg != null ? cfg.getButtons().size() : 0);
             data.put("welcomeEnabled", cfg != null && cfg.getWelcome().isEnabled());
             guildData.add(data);
@@ -81,9 +86,12 @@ public class DashboardController {
     @GetMapping("/guild/{guildId}/roles")
     public String rolesPage(@PathVariable String guildId, Model model) throws JsonProcessingException {
         SnowflakeValidator.validate(guildId, "guildId");
+
         GuildConfig cfg = configManager.getConfig(guildId);
-        Guild guild = jda.getGuildById(guildId);
-        if (cfg == null || guild == null) return "redirect:/";
+        var guildOpt = discord.getGuild(guildId);
+        if (cfg == null || guildOpt.isEmpty()) return "redirect:/";
+
+        var guild = guildOpt.get();
 
         try {
             String json = objectMapper.writeValueAsString(cfg.getButtons());
@@ -94,12 +102,9 @@ public class DashboardController {
             model.addAttribute("buttonsJson", "[]");
         }
 
-        // Ensure full member list is loaded before accessing getMembersWithRoles()
-        // Timeout: 10 seconds. On failure a warning is shown in the UI.
-        boolean membersLoaded = ensureMembersLoaded(guild);
         Map<String, Boolean> roleFoundByButtonId = new HashMap<>();
-
         List<Map<String, Object>> roleGroups = new ArrayList<>();
+
         for (GuildConfig.ButtonConfig btn : cfg.getButtons()) {
             Map<String, Object> group = new LinkedHashMap<>();
             group.put("id", btn.getId());
@@ -107,16 +112,18 @@ public class DashboardController {
             group.put("roleId", btn.getRoleId());
             group.put("style", btn.getStyle());
 
-            Role role = guild.getRoleById(btn.getRoleId());
-            if (role != null) {
-                group.put("roleName", role.getName());
+            var roleOpt = discord.getRole(guildId, btn.getRoleId());
+            if (roleOpt.isPresent()) {
+                var role = roleOpt.get();
+                group.put("roleName", role.name());
                 group.put("roleFound", true);
+
                 List<Map<String, String>> members = new ArrayList<>();
-                for (Member member : guild.getMembersWithRoles(role)) {
+                for (var member : discord.getMembersWithRole(guildId, btn.getRoleId())) {
                     Map<String, String> m = new LinkedHashMap<>();
-                    m.put("username", member.getUser().getName());
-                    m.put("displayName", member.getUser().getEffectiveName());
-                    m.put("userId", member.getId());
+                    m.put("username", member.username());
+                    m.put("displayName", member.displayName());
+                    m.put("userId", member.id());
                     members.add(m);
                 }
                 group.put("members", members);
@@ -125,21 +132,17 @@ public class DashboardController {
                 group.put("roleFound", false);
                 group.put("members", List.of());
             }
-            roleFoundByButtonId.put(btn.getId(), role != null);
+            roleFoundByButtonId.put(btn.getId(), roleOpt.isPresent());
             roleGroups.add(group);
         }
 
         model.addAttribute("guildId", guildId);
-        model.addAttribute("guildName", guild.getName());
+        model.addAttribute("guildName", guild.name());
         model.addAttribute("cfg", cfg);
         model.addAttribute("roleGroups", roleGroups);
         model.addAttribute("statusButton", cfg.getStatusButton());
         model.addAttribute("roleFoundByButtonId", roleFoundByButtonId);
-        if (!membersLoaded) {
-            model.addAttribute("memberWarning",
-                "⚠️ Mitgliederliste konnte nicht vollständig geladen werden (Timeout). " +
-                "Die Anzeige ist möglicherweise unvollständig.");
-        }
+
         return "roles";
     }
 
@@ -259,18 +262,20 @@ public class DashboardController {
     @GetMapping("/guild/{guildId}/welcome")
     public String welcomePage(@PathVariable String guildId, Model model) {
         SnowflakeValidator.validate(guildId, "guildId");
-        GuildConfig cfg = configManager.getConfig(guildId);
-        Guild guild = jda.getGuildById(guildId);
-        if (cfg == null || guild == null) return "redirect:/";
 
+        GuildConfig cfg = configManager.getConfig(guildId);
+        var guildOpt = discord.getGuild(guildId);
+        if (cfg == null || guildOpt.isEmpty()) return "redirect:/";
+
+        var guild = guildOpt.get();
         List<WelcomedUser> welcomedUsers = welcomeTrackingService.getWelcomedUsers(guildId);
 
-        List<Map<String, String>> channels = guild.getTextChannels().stream()
-                .map(ch -> Map.of("id", ch.getId(), "name", ch.getName()))
+        List<Map<String, String>> channels = discord.listTextChannels(guildId).stream()
+                .map(ch -> Map.of("id", ch.id(), "name", ch.name()))
                 .toList();
 
-        List<Map<String, String>> roles = guild.getRoles().stream()
-                .map(r -> Map.of("id", r.getId(), "name", r.getName()))
+        List<Map<String, String>> roles = discord.listRoles(guildId).stream()
+                .map(r -> Map.of("id", r.id(), "name", r.name()))
                 .toList();
 
         String channelsJson;
@@ -282,7 +287,7 @@ public class DashboardController {
         catch (Exception e) { rolesJson = "[]"; }
 
         model.addAttribute("guildId", guildId);
-        model.addAttribute("guildName", guild.getName());
+        model.addAttribute("guildName", guild.name());
         model.addAttribute("wc", cfg.getWelcome());
         model.addAttribute("welcomedUsers", welcomedUsers);
 
@@ -401,10 +406,9 @@ public class DashboardController {
     }
 
     private void refreshPanel(String guildId) {
-        Guild guild = jda.getGuildById(guildId);
         GuildConfig cfg = configManager.getConfig(guildId);
-        if (guild != null && cfg != null) {
-            panelAdminListener.refreshPanel(guild, cfg);
+        if (cfg != null) {
+            panelRefresher.refresh(guildId, cfg);
         }
     }
 }

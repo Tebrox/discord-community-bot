@@ -13,12 +13,14 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 
+@ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
 @Configuration
 @EnableConfigurationProperties({DiscordProperties.class, DashboardProperties.class})
 public class JdaConfiguration {

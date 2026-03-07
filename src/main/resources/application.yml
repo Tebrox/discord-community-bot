@@ -32,10 +32,12 @@ server:
 
 # Discord bot token - override via DISCORD_TOKEN env var
 discord:
+  enabled: true
   token: ${DISCORD_TOKEN}
 
 # Dashboard auth - override via env vars
 dashboard:
+  demo: false
   password-hash: ${DASHBOARD_PASSWORD_HASH}
   max-login-attempts: 5
   lockout-duration-minutes: 15
