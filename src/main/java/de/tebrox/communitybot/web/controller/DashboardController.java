@@ -291,6 +291,79 @@ public class DashboardController {
         return "redirect:/guild/" + guildId + "/roles";
     }
 
+    @PostMapping("/guild/{guildId}/roles/save-order")
+    public String saveButtonOrder(@PathVariable String guildId,
+                                  @RequestParam("order") String order,
+                                  RedirectAttributes ra) {
+        SnowflakeValidator.validate(guildId, "guildId");
+
+        if (!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
+
+        if (order == null || order.isBlank()) {
+            ra.addFlashAttribute("error", "Keine Reihenfolge übermittelt.");
+            return "redirect:/guild/" + guildId + "/roles";
+        }
+
+        try {
+            GuildConfig cfg = deepCopy(guildId);
+            if (cfg == null) return "redirect:/";
+
+            List<String> orderedIds = Arrays.stream(order.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank())
+                    .toList();
+
+            List<GuildConfig.ButtonConfig> existingButtons = cfg.getButtons();
+            Map<String, GuildConfig.ButtonConfig> byId = new LinkedHashMap<>();
+            for (GuildConfig.ButtonConfig button : existingButtons) {
+                byId.put(button.getId(), button);
+            }
+
+            if (orderedIds.size() != existingButtons.size()) {
+                ra.addFlashAttribute("error", "Ungültige Reihenfolge.");
+                return "redirect:/guild/" + guildId + "/roles";
+            }
+
+            Set<String> uniqueIds = new LinkedHashSet<>(orderedIds);
+            if (uniqueIds.size() != orderedIds.size()) {
+                ra.addFlashAttribute("error", "Reihenfolge enthält doppelte IDs.");
+                return "redirect:/guild/" + guildId + "/roles";
+            }
+
+            for (String id : orderedIds) {
+                if (!byId.containsKey(id)) {
+                    ra.addFlashAttribute("error", "Unbekannte Button-ID in Reihenfolge: " + id);
+                    return "redirect:/guild/" + guildId + "/roles";
+                }
+            }
+
+            List<GuildConfig.ButtonConfig> reordered = new ArrayList<>();
+            for (String id : orderedIds) {
+                reordered.add(byId.get(id));
+            }
+
+            cfg.setButtons(reordered);
+
+            // Wichtig:
+            // Die aktuelle UI bearbeitet die Reihenfolge der Buttons, nicht das manuelle Layout.
+            // Daher wird das explizite Layout zurückgesetzt, damit effectiveLayoutRows()
+            // künftig wieder die Reihenfolge aus cfg.buttons verwendet.
+            if (cfg.getLayout() != null) {
+                cfg.getLayout().setRows(new ArrayList<>());
+            }
+
+            configManager.saveGuildConfig(guildId, cfg);
+            refreshPanel(guildId);
+            ra.addFlashAttribute("success", "Button-Reihenfolge gespeichert.");
+        } catch (IOException e) {
+            ra.addFlashAttribute("error", "Speichern fehlgeschlagen: " + e.getMessage());
+        }
+
+        return "redirect:/guild/" + guildId + "/roles";
+    }
+
     // ------------------------------------------------------------------ Welcome
 
     @GetMapping("/guild/{guildId}/welcome")
