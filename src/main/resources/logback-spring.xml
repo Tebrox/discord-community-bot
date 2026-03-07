@@ -2,13 +2,13 @@
 <configuration>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss} [%-5level] %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss} [%level] %msg%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="LOGBUFFER" class="de.tebrox.rolesbot.service.LogBufferAppender"/>
+    <appender name="LOGBUFFER" class="de.tebrox.communitybot.service.LogBufferAppender"/>
 
-    <logger name="de.tebrox.rolesbot" level="INFO"/>
+    <logger name="de.tebrox.communitybot" level="INFO"/>
     <logger name="net.dv8tion" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
     <logger name="org.hibernate" level="WARN"/>

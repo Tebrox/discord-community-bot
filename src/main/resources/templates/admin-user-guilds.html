@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Admin – Guild-Rechte – CommunityBot</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header('admin', null, null)}"></div>
+
+<main class="container">
+    <div class="breadcrumb">
+        <a th:href="@{/admin/users}">← Zur Userliste</a>
+    </div>
+
+    <h1>Guild-Rechte</h1>
+    <p class="subtitle">
+        User: <code th:text="${dashboardUser.discordId}">123</code>
+        <span class="muted">• ID:</span> <span th:text="${dashboardUser.id}">1</span>
+    </p>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <section class="card">
+        <h3>Rechte pro Guild</h3>
+
+        <form th:action="@{'/admin/users/' + ${dashboardUser.id} + '/guilds'}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div th:each="g : ${guilds}" style="border:1px solid var(--border); border-radius:8px; padding:1rem; margin-bottom:1rem;">
+                <div style="margin-bottom:0.75rem;">
+                    <strong th:text="${g.name}">Guild</strong>
+                    <div class="muted"><code th:text="${g.id}">id</code></div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0.75rem;">
+                    <label th:each="perm : ${permissions}" style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="checkbox"
+                               th:name="${'perm_' + g.id + '_' + perm.name()}"
+                               th:checked="${accessService.hasPermission(currentMasks[g.id], perm)}">
+                        <span th:text="${perm.name()}">VIEW_GUILD</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-start;">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

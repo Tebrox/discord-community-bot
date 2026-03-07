@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<body>
+<header th:fragment="header(activePage, guildId, guildName)" class="header">
+    <div class="header-inner">
+        <div class="header-left">
+            <a class="logo" th:href="@{/}">
+                <img th:src="@{/favicon-32x32.png}" alt="Logo" class="logo-img"/>
+                <span>Community Bot</span>
+            </a>
+
+            <nav class="nav-links">
+                <a th:href="@{/}"
+                   class="nav-link"
+                   th:classappend="${activePage == 'dashboard'} ? ' active' : ''">
+                    Dashboard
+                </a>
+
+                <!-- Server-Link nur anzeigen, wenn guildId gesetzt ist -->
+                <a th:if="${guildId != null}"
+                   th:href="@{'/guild/' + ${guildId}}"
+                   class="nav-link"
+                   th:classappend="${activePage == 'guild'} ? ' active' : ''"
+                   th:text="${guildName != null ? guildName : 'Server'}">
+                    Server
+                </a>
+
+                <a th:if="${isSuperadmin == true}"
+                   th:href="@{/admin/users}"
+                   class="nav-link"
+                   th:classappend="${activePage == 'admin'} ? ' active' : ''">
+                    Admin
+                </a>
+
+                <a th:href="@{/logs}"
+                   class="nav-link"
+                   th:classappend="${activePage == 'logs'} ? ' active' : ''">
+                    Logs
+                </a>
+            </nav>
+        </div>
+
+        <form th:action="@{/auth/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-secondary">Abmelden</button>
+        </form>
+    </div>
+</header>
+</body>
+</html>

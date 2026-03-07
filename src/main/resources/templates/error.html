@@ -2,17 +2,25 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
 <head>
     <meta charset="UTF-8"/>
-    <title>Fehler – RolesBot</title>
+    <title>Fehler – CommunityBot</title>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
-<nav><span class="brand">🤖 RolesBot</span><a href="/">Dashboard</a></nav>
-<div class="wrap">
-    <div class="card">
-        <h1 style="color:var(--danger)">Fehler</h1>
-        <p th:text="${error}">Ein Fehler ist aufgetreten.</p>
-        <a class="btn btn-secondary" href="javascript:history.back()">Zurück</a>
-    </div>
-</div>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <a class="logo" href="/">🤖 Roles Bot</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h3>Fehler</h3>
+            <div class="alert alert-error" th:text="${error}">Ein Fehler ist aufgetreten.</div>
+            <a class="btn btn-secondary" href="javascript:history.back()">Zurück</a>
+        </section>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

@@ -1,5 +1,5 @@
 # ============================================================
-# RolesBot v4 – config.yml
+# CommunityBot v4 – config.yml
 # Anwendungs-Konfiguration (Web, Auth, Datenbank)
 # ============================================================
 # Token IMMER über Environment Variable DISCORD_TOKEN setzen!
@@ -18,7 +18,7 @@ web:
     timeoutMinutes: 120
 
 auth:
-  # Hash erzeugen: java -cp rolesbot.jar de.tebrox.rolesbot.util.PasswordHasher DEIN_PASSWORT
+  # Hash erzeugen: java -cp CommunityBot.jar de.tebrox.communitybot.util.PasswordHasher DEIN_PASSWORT
   passwordHashBcrypt: "$2a$12$ERSETZE_MICH_MIT_ECHTEM_BCRYPT_HASH"
   maxFailedAttempts: 5
   lockMinutes: 15
@@ -32,6 +32,6 @@ database:
   mysql:
     host: "127.0.0.1"
     port: 3306
-    database: "rolesbot"
-    username: "rolesbot"
+    database: "CommunityBot"
+    username: "CommunityBot"
     password: "DEIN_DB_PASSWORT"

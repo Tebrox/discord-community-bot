@@ -5,14 +5,21 @@ plugins {
 }
 
 group = 'de.tebrox'
-version = '1.1.0'
-sourceCompatibility = '17'
+version = '1.2.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -20,10 +27,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
     // Database
     runtimeOnly 'com.h2database:h2'
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.4.1")
 
     // JDA
     implementation 'net.dv8tion:JDA:5.2.1'
@@ -43,23 +51,18 @@ dependencies {
 
     // ------------------------------------------------------------------ Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    // JUnit 5 (included transitively via spring-boot-starter-test)
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    // Mockito (included transitively, but explicit for clarity)
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
-    // Logback test support (for LogBufferAppender unit test)
-    testImplementation 'ch.qos.logback:logback-classic'
+
 }
 
 test {
     useJUnitPlatform()
 }
 
+
 jar {
     enabled = false
 }
 
 bootJar {
-    archiveFileName.set("rolesbot-${project.version}.jar")
+    archiveFileName.set("CommunityBot-${project.version}.jar")
 }

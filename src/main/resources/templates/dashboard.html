@@ -3,64 +3,24 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Dashboard – RolesBot</title>
+    <title>Dashboard – CommunityBot</title>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
-<nav>
-    <span class="brand">🤖 RolesBot</span>
-    <a href="/" class="active">Dashboard</a>
-    <a th:href="@{/logs}">Logs</a>
-    <form th:action="@{/auth/logout}" method="post" style="margin-left:auto">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
-    </form>
-</nav>
-<div class="wrap">
-    <h1>Dashboard</h1>
+    <div th:replace="~{fragments/header :: header('dashboard', null, null)}"></div>
 
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <div class="container">
+        <h1>Server Übersicht</h1>
+        <p class="muted">Wähle einen Server, um dessen Einstellungen zu bearbeiten.</p>
 
-    <div class="card">
-        <div class="stack">
-            <span class="stat" th:text="${totalGuilds} + ' Server'">0 Server</span>
-            <span class="muted">Multi-Guild Konfiguration</span>
+        <div id="guilds-grid" class="guilds-grid">
+            <div class="muted">Lade Server…</div>
         </div>
     </div>
 
-    <div class="card">
-        <h2>Registrierte Server</h2>
-        <div th:if="${#lists.isEmpty(guilds)}" class="muted">
-            Noch kein Server registriert. Bot einem Server hinzufügen.
-        </div>
-        <table th:if="${!#lists.isEmpty(guilds)}">
-            <thead>
-                <tr>
-                    <th>Server</th>
-                    <th>Guild ID</th>
-                    <th>Buttons</th>
-                    <th>Welcome</th>
-                    <th>Aktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="guild : ${guilds}">
-                    <td th:text="${guild.name}">Name</td>
-                    <td><code th:text="${guild.id}">ID</code></td>
-                    <td th:text="${guild.buttonCount}">0</td>
-                    <td th:text="${guild.welcomeEnabled ? '✅' : '❌'}">❌</td>
-                    <td>
-                        <a class="btn btn-primary" th:href="@{'/guild/' + ${guild.id} + '/roles'}">Rollen</a>
-                        <a class="btn btn-secondary" th:href="@{'/guild/' + ${guild.id} + '/welcome'}">Welcome</a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-<script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

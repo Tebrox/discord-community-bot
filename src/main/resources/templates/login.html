@@ -3,59 +3,39 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>RolesBot – Login</title>
+    <title>CommunityBot – Login</title>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body class="login-body">
-<div class="login-container">
+<div class="login-wrapper">
     <div class="login-card">
-        <h1>🤖 RolesBot</h1>
-        <p class="muted">Admin-Dashboard</p>
-        <div id="error-msg" class="alert alert-error" style="display:none"></div>
-        <div class="form-group">
-            <label>Passwort</label>
-            <input type="password" id="password" placeholder="Passwort eingeben..." autofocus/>
+        <h1>Community Bot Dashboard</h1>
+        <p class="login-subtitle">Anmeldung über Discord</p>
+
+        <p class="muted" style="margin-bottom: 16px;">
+            Zugriff nur für freigeschaltete Dashboard-Benutzer.
+        </p>
+
+        <div th:if="${loginError == 'not-allowlisted'}" class="alert alert-error" style="margin-bottom: 16px;">
+            Dein Account ist noch nicht für das Dashboard freigeschaltet.
         </div>
-        <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">Anmelden</button>
+
+        <div th:if="${loginError == 'disabled'}" class="alert alert-error" style="margin-bottom: 16px;">
+            Dein Dashboard-Zugang ist derzeit deaktiviert.
+        </div>
+
+        <div th:if="${loginError == 'missing-discord-id' or loginError == 'invalid-oauth-user'}" class="alert alert-error" style="margin-bottom: 16px;">
+            Anmeldung fehlgeschlagen.
+        </div>
+
+        <a class="btn btn-primary btn-full" th:href="@{/oauth2/authorization/discord}">
+            Mit Discord anmelden
+        </a>
+    </div>
+
+    <div class="login-footer">
+        <div th:replace="~{fragments/footer :: footer}"></div>
     </div>
 </div>
-<script th:inline="javascript">
-    const csrfToken = /*[[${_csrf.token}]]*/ '';
-    const csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
-
-    function doLogin() {
-        const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('error-msg');
-        errorDiv.style.display = 'none';
-
-        fetch('/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                [csrfHeader]: csrfToken
-            },
-            body: JSON.stringify({ password })
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = data.redirect || '/';
-            } else {
-                errorDiv.textContent = data.message || 'Fehler';
-                errorDiv.style.display = 'block';
-            }
-        })
-        .catch(() => {
-            errorDiv.textContent = 'Netzwerkfehler.';
-            errorDiv.style.display = 'block';
-        });
-    }
-
-    document.getElementById('password').addEventListener('keydown', e => {
-        if (e.key === 'Enter') doLogin();
-    });
-</script>
 </body>
 </html>

@@ -1,0 +1,19 @@
+[Unit]
+Description=CommunityBot v1 – Multi-Guild Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=communitybot
+WorkingDirectory=/opt/communitybot
+ExecStart=/usr/bin/java -jar /opt/communitybot/communitybot-1.0.0.jar
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Token via Environment Variable – NICHT im Code!
+EnvironmentFile=/opt/communitybot/bot.env
+
+[Install]
+WantedBy=multi-user.target
