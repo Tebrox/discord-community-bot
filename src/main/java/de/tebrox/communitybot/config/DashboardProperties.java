@@ -24,5 +24,7 @@ public record DashboardProperties(
         int maxLoginAttempts,
 
         @Positive
-        int lockoutDurationMinutes
+        int lockoutDurationMinutes,
+
+        String superadminDiscordId
 ) {}

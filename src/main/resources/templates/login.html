@@ -5,30 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>CommunityBot – Login</title>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body class="login-body">
-    <div class="login-wrapper">
-        <div class="login-card">
-            <h1>Community Bot Dashboard</h1>
-            <p class="login-subtitle">Bitte anmelden</p>
+<div class="login-wrapper">
+    <div class="login-card">
+        <h1>Community Bot Dashboard</h1>
+        <p class="login-subtitle">Anmeldung über Discord</p>
 
-            <div id="error-msg" class="error-msg" style="display:none"></div>
+        <p class="muted" style="margin-bottom: 16px;">
+            Zugriff nur für freigeschaltete Dashboard-Benutzer.
+        </p>
 
-            <div class="form-group">
-                <label for="password">Passwort</label>
-                <input type="password" id="password" class="form-input" placeholder="Passwort eingeben..." autofocus/>
-            </div>
-
-            <button class="btn btn-primary btn-full" id="login-btn">Anmelden</button>
+        <div th:if="${loginError == 'not-allowlisted'}" class="alert alert-error" style="margin-bottom: 16px;">
+            Dein Account ist noch nicht für das Dashboard freigeschaltet.
         </div>
 
-        <div class="login-footer">
-            <div th:replace="~{fragments/footer :: footer}"></div>
+        <div th:if="${loginError == 'disabled'}" class="alert alert-error" style="margin-bottom: 16px;">
+            Dein Dashboard-Zugang ist derzeit deaktiviert.
         </div>
+
+        <div th:if="${loginError == 'missing-discord-id' or loginError == 'invalid-oauth-user'}" class="alert alert-error" style="margin-bottom: 16px;">
+            Anmeldung fehlgeschlagen.
+        </div>
+
+        <a class="btn btn-primary btn-full" th:href="@{/oauth2/authorization/discord}">
+            Mit Discord anmelden
+        </a>
     </div>
 
-    <script th:src="@{/js/login.js}"></script>
+    <div class="login-footer">
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
 </body>
 </html>

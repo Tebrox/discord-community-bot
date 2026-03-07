@@ -1,13 +1,11 @@
 package de.tebrox.communitybot.web.controller;
 
+import de.tebrox.communitybot.security.DashboardPermission;
+import de.tebrox.communitybot.service.DashboardAccessService;
 import de.tebrox.communitybot.web.discord.DashboardDiscordService;
 import de.tebrox.communitybot.web.dto.GuildDto;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -16,20 +14,25 @@ import java.util.List;
 public class BotApiController {
 
     private final DashboardDiscordService discord;
+    private final DashboardAccessService accessService;
 
-    public BotApiController(DashboardDiscordService discord) {
+    public BotApiController(DashboardDiscordService discord,
+                            DashboardAccessService accessService) {
         this.discord = discord;
+        this.accessService = accessService;
     }
 
     @GetMapping("/guilds")
     public ResponseEntity<List<GuildDto>> getGuilds() {
+        if (!accessService.canAccessDashboard()) {
+            return ResponseEntity.status(403).build();
+        }
+
         List<GuildDto> guilds = discord.listGuilds().stream()
+                .filter(g -> accessService.hasGuildPermission(g.id(), DashboardPermission.VIEW_GUILD))
                 .map(g -> new GuildDto(g.id(), g.name(), g.iconUrl()))
                 .toList();
-        return ResponseEntity.ok(guilds);
-    }
 
-    private GuildDto toDto(Guild guild) {
-        return new GuildDto(guild.getId(), guild.getName(), guild.getIconUrl());
+        return ResponseEntity.ok(guilds);
     }
 }

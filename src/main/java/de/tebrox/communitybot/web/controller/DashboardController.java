@@ -4,17 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tebrox.communitybot.config.GuildConfig;
 import de.tebrox.communitybot.config.GuildConfigManager;
-import de.tebrox.communitybot.discord.listeners.PanelAdminListener;
 import de.tebrox.communitybot.persistence.entity.WelcomedUser;
+import de.tebrox.communitybot.security.DashboardPermission;
+import de.tebrox.communitybot.service.DashboardAccessService;
 import de.tebrox.communitybot.service.WelcomeTrackingService;
 import de.tebrox.communitybot.util.SnowflakeValidator;
 import de.tebrox.communitybot.web.discord.DashboardDiscordService;
 import de.tebrox.communitybot.web.panel.PanelRefresher;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +42,15 @@ public class DashboardController {
 
     private final ObjectMapper objectMapper;
 
+    private final DashboardAccessService accessService;
+
     @GetMapping("/guild/{guildId}")
     public String guildOverview(@PathVariable String guildId, Model model) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.VIEW_GUILD)) {
+            return "redirect:/?forbidden";
+        }
 
         var guildOpt = discord.getGuild(guildId);
         GuildConfig cfg = configManager.getConfig(guildId);
@@ -86,6 +92,10 @@ public class DashboardController {
     @GetMapping("/guild/{guildId}/roles")
     public String rolesPage(@PathVariable String guildId, Model model) throws JsonProcessingException {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
 
         GuildConfig cfg = configManager.getConfig(guildId);
         var guildOpt = discord.getGuild(guildId);
@@ -154,6 +164,12 @@ public class DashboardController {
                              @RequestParam(defaultValue = "PRIMARY") String style,
                              RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
+
+
         if (id.isBlank() || label.isBlank() || roleId.isBlank()) {
             ra.addFlashAttribute("error", "Alle Felder sind Pflichtfelder.");
             return "redirect:/guild/" + guildId + "/roles";
@@ -196,6 +212,12 @@ public class DashboardController {
                                @RequestParam String id,
                                RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
+
+
         try {
             GuildConfig cfg = deepCopy(guildId);
             if (cfg == null) return "redirect:/";
@@ -216,6 +238,12 @@ public class DashboardController {
                                  @RequestParam String title,
                                  RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
+
+
         try {
             GuildConfig cfg = deepCopy(guildId);
             if (cfg == null) return "redirect:/";
@@ -236,6 +264,12 @@ public class DashboardController {
                                    @RequestParam(defaultValue = "SECONDARY") String style,
                                    RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
+
+
         if (label == null || label.isBlank()) {
             ra.addFlashAttribute("error", "Label darf nicht leer sein.");
             return "redirect:/guild/" + guildId + "/roles";
@@ -262,6 +296,10 @@ public class DashboardController {
     @GetMapping("/guild/{guildId}/welcome")
     public String welcomePage(@PathVariable String guildId, Model model) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_WELCOME)) {
+            return "redirect:/?forbidden";
+        }
 
         GuildConfig cfg = configManager.getConfig(guildId);
         var guildOpt = discord.getGuild(guildId);
@@ -313,6 +351,11 @@ public class DashboardController {
                               @RequestParam(required = false) String embedAvatar,
                               RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_WELCOME)) {
+            return "redirect:/?forbidden";
+        }
+
         try {
             GuildConfig cfg = deepCopy(guildId);
             if (cfg == null) return "redirect:/";
@@ -341,6 +384,11 @@ public class DashboardController {
                                      RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
         SnowflakeValidator.validate(userId, "userId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_WELCOME)) {
+            return "redirect:/?forbidden";
+        }
+
         welcomeTrackingService.deleteWelcomedUser(guildId, userId);
         ra.addFlashAttribute("success", "User-Eintrag gelöscht.");
         return "redirect:/guild/" + guildId + "/welcome";
@@ -349,6 +397,10 @@ public class DashboardController {
     @GetMapping("/guild/{guildId}/roles/refresh")
     public String refreshRolesPanel(@PathVariable String guildId, RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
+            return "redirect:/?forbidden";
+        }
 
         try {
             refreshPanel(guildId);

@@ -4,7 +4,7 @@
   async function fetchJson(url) {
     const res = await fetch(url, { credentials: 'same-origin' });
     if (res.status === 401 || res.status === 403) {
-      window.location.href = '/auth/login';
+      window.location.href = '/login';
       return null;
     }
     if (!res.ok) throw new Error('HTTP ' + res.status);

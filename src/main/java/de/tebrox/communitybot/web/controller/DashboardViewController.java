@@ -2,6 +2,8 @@ package de.tebrox.communitybot.web.controller;
 
 import de.tebrox.communitybot.config.GuildConfig;
 import de.tebrox.communitybot.config.GuildConfigManager;
+import de.tebrox.communitybot.security.DashboardPermission;
+import de.tebrox.communitybot.service.DashboardAccessService;
 import de.tebrox.communitybot.util.SnowflakeValidator;
 import de.tebrox.communitybot.web.discord.DashboardDiscordService;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +20,23 @@ public class DashboardViewController {
 
     private final DashboardDiscordService discord;
     private final GuildConfigManager configManager;
+    private final DashboardAccessService accessService;
 
     @GetMapping({"/", "/dashboard"})
     public String dashboard() {
+        if (!accessService.canAccessDashboard()) {
+            return "redirect:/login?error=not-allowed";
+        }
         return "dashboard";
     }
 
     @GetMapping("/dashboard/{guildId}")
     public String guildOverview(@PathVariable String guildId, Model model) {
         SnowflakeValidator.validate(guildId, "guildId");
+
+        if(!accessService.hasGuildPermission(guildId, DashboardPermission.VIEW_GUILD)) {
+            return "redirect:/?forbidden";
+        }
 
         var guildOpt = discord.getGuild(guildId);
         GuildConfig cfg = configManager.getConfig(guildId);

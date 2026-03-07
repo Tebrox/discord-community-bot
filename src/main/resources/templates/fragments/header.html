@@ -25,6 +25,13 @@
                     Server
                 </a>
 
+                <a th:if="${isSuperadmin == true}"
+                   th:href="@{/admin/users}"
+                   class="nav-link"
+                   th:classappend="${activePage == 'admin'} ? ' active' : ''">
+                    Admin
+                </a>
+
                 <a th:href="@{/logs}"
                    class="nav-link"
                    th:classappend="${activePage == 'logs'} ? ' active' : ''">
