@@ -1,4 +1,4 @@
-package de.tebrox.communitybot.config;
+package de.tebrox.communitybot.community.config;
 
 import java.util.*;
 
@@ -6,7 +6,7 @@ import java.util.*;
  * Per-guild Discord bot configuration loaded from config.yml.
  * This is a plain POJO, NOT a JPA entity. Persistence of Discord panel state is in the DB.
  */
-public class GuildConfig {
+public class CommunityGuildConfig {
 
     private PanelConfig panel = new PanelConfig();
     private List<ButtonConfig> buttons = new ArrayList<>();
