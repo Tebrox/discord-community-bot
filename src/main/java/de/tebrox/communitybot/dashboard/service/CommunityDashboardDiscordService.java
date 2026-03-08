@@ -12,11 +12,11 @@ import java.util.Optional;
 
 @Service
 @ConditionalOnProperty(name="dashboard.demo", havingValue = "false", matchIfMissing = true)
-public class LiveDashboardDiscordService implements DashboardDiscordService {
+public class CommunityDashboardDiscordService implements DashboardDiscordService {
 
     private final JDA jda;
 
-    public LiveDashboardDiscordService(@Qualifier("communityJda") JDA jda) {
+    public CommunityDashboardDiscordService(@Qualifier("communityJda") JDA jda) {
         this.jda = jda;
     }
 
