@@ -45,7 +45,7 @@ public class TicketDashboardController {
         }
 
         if (!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_TICKETS)) {
-            return "redirect:/dashboard/" + guildId + "?forbidden=tickets";
+            return "redirect:/guild/" + guildId + "?forbidden=tickets";
         }
 
         var dashboardGuildOpt = dashboardDiscordService.getGuild(guildId);
