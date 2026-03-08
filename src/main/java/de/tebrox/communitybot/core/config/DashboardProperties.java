@@ -17,7 +17,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "dashboard")
 public record DashboardProperties(
-        @NotBlank(message = "DASHBOARD_PASSWORD_HASH must be set in application.yml or as env var")
         String passwordHash,
 
         @Positive
@@ -26,5 +25,7 @@ public record DashboardProperties(
         @Positive
         int lockoutDurationMinutes,
 
-        String superadminDiscordId
+        String superadminDiscordId,
+
+        boolean demo
 ) {}
