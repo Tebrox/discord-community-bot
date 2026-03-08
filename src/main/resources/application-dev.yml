@@ -1,5 +1,8 @@
 discord:
-  enabled: false
+  community:
+    enabled: false
+  ticket:
+    enabled: false
 
 dashboard:
   demo: true

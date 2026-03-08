@@ -52,8 +52,12 @@ server:
 
 # Discord bot token - override via DISCORD_TOKEN env var
 discord:
-  enabled: true
-  token: ${DISCORD_TOKEN}
+  community:
+    enabled: true
+    token: ${COMMUNITY_BOT_TOKEN}
+  ticket:
+    enabled: true
+    token: ${TICKET_BOT_TOKEN}
 
 # Dashboard auth - override via env vars
 dashboard:
