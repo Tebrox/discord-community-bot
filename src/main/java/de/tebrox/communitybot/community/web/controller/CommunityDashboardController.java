@@ -1,4 +1,4 @@
-package de.tebrox.communitybot.dashboard.controller;
+package de.tebrox.communitybot.community.web.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
