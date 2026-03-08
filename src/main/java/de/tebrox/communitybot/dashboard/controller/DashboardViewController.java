@@ -28,7 +28,7 @@ public class DashboardViewController {
         return "dashboard";
     }
 
-    @GetMapping("/dashboard/{guildId}")
+    @GetMapping("/guild/{guildId}")
     public String guildOverview(@PathVariable String guildId, Model model) {
         SnowflakeValidator.validate(guildId, "guildId");
 
