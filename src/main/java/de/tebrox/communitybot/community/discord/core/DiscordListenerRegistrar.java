@@ -4,6 +4,7 @@ import de.tebrox.communitybot.community.discord.listener.*;
 import net.dv8tion.jda.api.JDA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -22,7 +23,7 @@ public class DiscordListenerRegistrar {
     private final ReloadListener reloadListener;
     private final WelcomeListener welcomeListener;
 
-    public DiscordListenerRegistrar(JDA jda,
+    public DiscordListenerRegistrar(@Qualifier("communityJda") JDA jda,
                                     GuildLifecycleListener guildLifecycleListener,
                                     RoleButtonsListener roleButtonsListener,
                                     PanelAdminListener panelAdminListener,

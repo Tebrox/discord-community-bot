@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,7 @@ public class CommunityGuildConfigService {
 
     /** Ensures every guild the bot is currently in has a config row. */
     @Transactional
-    public void reconcile(JDA jda) {
+    public void reconcile(@Qualifier("communityJda")JDA jda) {
         for (Guild guild : jda.getGuilds()) {
             ensureRegistered(guild.getId(), guild.getName());
         }
@@ -103,7 +104,7 @@ public class CommunityGuildConfigService {
     }
 
     /** "Reload" now just clears the cache and optionally re-creates missing DB rows. */
-    public void reload(JDA jda) {
+    public void reload(@Qualifier("communityJda") JDA jda) {
         cache.clear();
         reconcile(jda);
         log.info("[CommunityBot] Cache cleared and reconciled (DB). Rows in DB: {}", repository.count());

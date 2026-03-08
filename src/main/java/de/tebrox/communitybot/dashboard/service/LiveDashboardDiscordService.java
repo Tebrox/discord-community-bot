@@ -3,6 +3,7 @@ package de.tebrox.communitybot.dashboard.service;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public class LiveDashboardDiscordService implements DashboardDiscordService {
 
     private final JDA jda;
 
-    public LiveDashboardDiscordService(JDA jda) {
+    public LiveDashboardDiscordService(@Qualifier("communityJda") JDA jda) {
         this.jda = jda;
     }
 

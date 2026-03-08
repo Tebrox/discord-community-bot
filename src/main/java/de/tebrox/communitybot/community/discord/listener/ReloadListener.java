@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -20,14 +21,14 @@ public class ReloadListener extends ListenerAdapter {
     private final JDA jda;
     private final LogBuffer logBuffer;
 
-    public ReloadListener(CommunityGuildConfigService configManager, JDA jda, LogBuffer logBuffer) {
+    public ReloadListener(CommunityGuildConfigService configManager, @Qualifier("communityJda") JDA jda, LogBuffer logBuffer) {
         this.configManager = configManager;
         this.jda = jda;
         this.logBuffer = logBuffer;
     }
 
     // JDA is injected lazily to avoid circular dependency – set after JDA is ready
-    public void setJda(JDA jda) {
+    public void setJda(@Qualifier("communityJda") JDA jda) {
         // handled via constructor injection in JdaConfiguration
     }
 
