@@ -43,48 +43,6 @@ public class CommunityDashboardController {
 
     private final DashboardAccessService accessService;
 
-    @GetMapping("/guild/{guildId}")
-    public String guildOverview(@PathVariable String guildId, Model model) {
-        SnowflakeValidator.validate(guildId, "guildId");
-
-        if(!accessService.hasGuildPermission(guildId, DashboardPermission.VIEW_GUILD)) {
-            return "redirect:/?forbidden";
-        }
-
-        var guildOpt = discord.getGuild(guildId);
-        CommunityGuildConfig cfg = configManager.getConfig(guildId);
-        if (guildOpt.isEmpty() || cfg == null) return "redirect:/";
-
-        var guild = guildOpt.get();
-
-        model.addAttribute("guildId", guildId);
-        model.addAttribute("guildName", guild.name());
-        model.addAttribute("memberCount", guild.memberCount());
-        model.addAttribute("cfg", cfg);
-        model.addAttribute("buttonCount", cfg.getButtons() != null ? cfg.getButtons().size() : 0);
-        model.addAttribute("welcomeEnabled", cfg.getWelcome() != null && cfg.getWelcome().isEnabled());
-        return "guild";
-    }
-
-    // ------------------------------------------------------------------ Dashboard
-
-    @GetMapping("/legacy-dashboard")
-    public String legacy_dashboard(Model model) {
-        var guilds = discord.listGuilds();
-        List<Map<String, Object>> guildData = new ArrayList<>();
-        for (var guild : guilds) {
-            Map<String, Object> data = new LinkedHashMap<>();
-            data.put("id", guild.id());
-            data.put("name", guild.name());
-            CommunityGuildConfig cfg = configManager.getConfig(guild.id());
-            data.put("buttonCount", cfg != null ? cfg.getButtons().size() : 0);
-            data.put("welcomeEnabled", cfg != null && cfg.getWelcome().isEnabled());
-            guildData.add(data);
-        }
-        model.addAttribute("guilds", guildData);
-        model.addAttribute("totalGuilds", guilds.size());
-        return "legacy-dashboard";
-    }
 
     // ------------------------------------------------------------------ Rollen / Buttons
 
