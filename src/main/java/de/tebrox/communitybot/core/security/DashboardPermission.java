@@ -5,7 +5,8 @@ public enum DashboardPermission {
     MANAGE_ROLES    (1L << 1),
     MANAGE_WELCOME  (1L << 2),
     VIEW_LOGS       (1L << 3),
-    ADMIN_GUILD     (1L << 4);
+    ADMIN_GUILD     (1L << 4),
+    MANAGE_TICKETS  (1L << 5);
 
     public final long bit;
     DashboardPermission(long bit) {
