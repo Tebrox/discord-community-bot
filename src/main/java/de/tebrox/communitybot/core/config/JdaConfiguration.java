@@ -13,12 +13,15 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
+
+import java.util.EnumSet;
 
 @ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
 @Configuration
@@ -27,65 +30,51 @@ public class JdaConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(JdaConfiguration.class);
 
-    private JDA jda;
-
-    @Bean
-    public JDA jda(
-            DiscordProperties discordProperties,
-            CommunityGuildConfigService configManager
-    ) throws InterruptedException {
-
-        log.info("[CommunityBot] Initializing JDA (createLight + GUILD_MEMBERS + MemberCachePolicy.ALL)...");
-
-        this.jda = JDABuilder.createLight(
-                        discordProperties.token(),
-                        GatewayIntent.GUILD_MEMBERS,
-                        GatewayIntent.GUILD_MESSAGES,
-                        GatewayIntent.GUILD_MESSAGE_REACTIONS
-                )
-                .disableCache(
-                        CacheFlag.ACTIVITY,
-                        CacheFlag.CLIENT_STATUS,
-                        CacheFlag.EMOJI,
-                        CacheFlag.STICKER,
-                        CacheFlag.ONLINE_STATUS,
-                        CacheFlag.SCHEDULED_EVENTS,
-                        CacheFlag.VOICE_STATE
-                )
-                .setMemberCachePolicy(MemberCachePolicy.ALL)
-                .setChunkingFilter(ChunkingFilter.ALL)
-                .setActivity(Activity.watching("Community"))
-                .build()
-                .awaitReady();
-
-        log.info("[CommunityBot] JDA ready. Logged in as: {}", jda.getSelfUser().getAsTag());
-
-        configManager.reconcile(jda);
-
-        jda.updateCommands().addCommands(
-                Commands.slash("roles", "Rollenpanel verwalten")
-                        .addSubcommands(
-                                new SubcommandData("setup", "Erstellt oder editiert das Rollenpanel"),
-                                new SubcommandData("repost", "Postet das Rollenpanel neu (mit Löschung des alten)")
-                        )
-                        .setDefaultPermissions(DefaultMemberPermissions.DISABLED),
-
-                Commands.slash("community", "CommunityBot verwalten")
-                        .addSubcommands(
-                                new SubcommandData("reload", "Leert den Cache und synchronisiert Guild-Configs aus der DB")
-                        )
-                        .setDefaultPermissions(DefaultMemberPermissions.DISABLED)
-        ).queue();
-
-        log.info("[CommunityBot] Slash commands registered. Active guilds: {}", jda.getGuilds().size());
-        return jda;
+    @Bean("communityJda")
+    @ConditionalOnProperty(prefix = "discord.community", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public JDA communityJda(DiscordProperties discordProperties) {
+        DiscordProperties.BotProperties bot = discordProperties.getCommunity();
+        if(!bot.isConfigured()) {
+            throw new BeanCreationException("communityJda", "COMMUNITY_BOT_TOKEN fehlt oder ist leer.");
+        }
+        log.info("Creating community JDA...");
+        return buildJda(bot.getToken(), "community");
     }
 
-    @EventListener(ContextClosedEvent.class)
-    public void onContextClosed() {
-        if (jda != null) {
-            log.info("[CommunityBot] Shutting down JDA gracefully...");
-            jda.shutdown();
+    @Bean("ticketJda")
+    @ConditionalOnProperty(prefix = "discord.ticket", name="enabled", havingValue = "true", matchIfMissing = true)
+    public JDA ticketJda(DiscordProperties discordProperties) {
+        DiscordProperties.BotProperties bot = discordProperties.getTicket();
+        if(!bot.isConfigured()) {
+            throw new BeanCreationException("ticketJda", "TICKET_BOT_TOKEN fehlt oder ist leer.");
+        }
+        log.info("Creating ticket JDA...");
+        return buildJda(bot.getToken(), "ticket");
+    }
+
+    private JDA buildJda(String token, String botKey) {
+        try {
+            JDA jda = JDABuilder.createDefault(token)
+                    .enableIntents(
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.GUILD_MESSAGE_REACTIONS,
+                            GatewayIntent.MESSAGE_CONTENT
+                    )
+                    .enableCache(EnumSet.of(
+                            CacheFlag.MEMBER_OVERRIDES,
+                            CacheFlag.ROLE_TAGS
+                    ))
+                    .build()
+                    .awaitReady();
+
+            log.info("JDA for bot '{}' is ready as {}", botKey, jda.getSelfUser().getAsTag());
+            return jda;
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BeanCreationException("Interrupted while creating JDA for bot '" + botKey + "'", e);
+        } catch (Exception e) {
+            throw new BeanCreationException("Failed to create JDA for bot '" + botKey + "'", e);
         }
     }
 }
