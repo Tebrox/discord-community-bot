@@ -41,6 +41,19 @@ public class DashboardViewController {
         if (guildOpt.isEmpty() || cfg == null) return "redirect:/";
 
         var guild = guildOpt.get();
+
+        boolean canManageRoles = accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES);
+        boolean canManageWelcome = accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_WELCOME);
+        boolean canManageTickets = accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_TICKETS);
+        boolean canViewLogs = accessService.hasGuildPermission(guildId, DashboardPermission.VIEW_LOGS);
+        boolean canAdminGuild = accessService.hasGuildPermission(guildId, DashboardPermission.ADMIN_GUILD);
+
+        model.addAttribute("canManageRoles", canManageRoles);
+        model.addAttribute("canManageWelcome", canManageWelcome);
+        model.addAttribute("canManageTickets", canManageTickets);
+        model.addAttribute("canViewLogs", canViewLogs);
+        model.addAttribute("canAdminGuild", canAdminGuild);
+
         model.addAttribute("guildId", guildId);
         model.addAttribute("guildName", guild.name());
         model.addAttribute("memberCount", guild.memberCount());
