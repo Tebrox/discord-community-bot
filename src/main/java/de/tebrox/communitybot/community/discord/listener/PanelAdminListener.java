@@ -2,7 +2,7 @@ package de.tebrox.communitybot.community.discord.listener;
 
 import de.tebrox.communitybot.community.config.CommunityGuildConfig;
 import de.tebrox.communitybot.community.service.CommunityGuildConfigService;
-import de.tebrox.communitybot.community.panel.PanelBuilder;
+import de.tebrox.communitybot.community.discord.commands.PanelBuilder;
 import de.tebrox.communitybot.community.persistence.entity.PanelState;
 import de.tebrox.communitybot.core.logging.LogBuffer;
 import de.tebrox.communitybot.community.service.PanelService;

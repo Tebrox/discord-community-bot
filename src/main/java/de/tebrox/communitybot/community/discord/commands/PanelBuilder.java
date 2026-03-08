@@ -1,6 +1,7 @@
-package de.tebrox.communitybot.community.panel;
+package de.tebrox.communitybot.community.discord.commands;
 
 import de.tebrox.communitybot.community.config.CommunityGuildConfig;
+import de.tebrox.communitybot.community.discord.buttons.ButtonFactory;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.ActionRow;

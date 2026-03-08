@@ -1,4 +1,4 @@
-package de.tebrox.communitybot.community.panel;
+package de.tebrox.communitybot.community.discord.buttons;
 
 import de.tebrox.communitybot.community.config.CommunityGuildConfig;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
