@@ -6,10 +6,6 @@
 # Niemals den Token in diese Datei schreiben.
 # ============================================================
 
-discord:
-  # Leer lassen – Token über DISCORD_TOKEN Environment Variable setzen (empfohlen)
-  token: ""
-
 web:
   host: "127.0.0.1"   # Nur lokal, oder 0.0.0.0 für alle Interfaces
   port: 8080
@@ -17,11 +13,6 @@ web:
     secure: false       # true wenn hinter HTTPS-Reverse-Proxy
     timeoutMinutes: 120
 
-auth:
-  # Hash erzeugen: java -cp CommunityBot.jar de.tebrox.communitybot.core.security.PasswordHasher DEIN_PASSWORT
-  passwordHashBcrypt: "$2a$12$ERSETZE_MICH_MIT_ECHTEM_BCRYPT_HASH"
-  maxFailedAttempts: 5
-  lockMinutes: 15
 
 database:
   type: "h2"            # h2 (Standard) oder mysql

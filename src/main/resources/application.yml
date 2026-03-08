@@ -62,9 +62,6 @@ discord:
 # Dashboard auth - override via env vars
 dashboard:
   demo: false
-  password-hash: ${DASHBOARD_PASSWORD_HASH}
-  max-login-attempts: 5
-  lockout-duration-minutes: 15
   superadmin-discord-id: ${DASHBOARD_SUPERADMIN_DISCORD_ID}
 
 logging:

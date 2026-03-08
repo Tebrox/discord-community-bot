@@ -1,26 +1,19 @@
 package de.tebrox.communitybot.core.config.appconfig;
 
+import jakarta.security.auth.message.config.AuthConfig;
+
 public class AppConfig {
 
-    private DiscordConfig discord;
     private WebConfig web;
     private AuthConfig auth;
     private DatabaseConfig database;
 
-    public DiscordConfig getDiscord()  { return discord; }
-    public void setDiscord(DiscordConfig d) { this.discord = d; }
     public WebConfig getWeb()          { return web; }
     public void setWeb(WebConfig w)    { this.web = w; }
     public AuthConfig getAuth()        { return auth; }
     public void setAuth(AuthConfig a)  { this.auth = a; }
     public DatabaseConfig getDatabase() { return database; }
     public void setDatabase(DatabaseConfig d) { this.database = d; }
-
-    public static class DiscordConfig {
-        private String token = "";
-        public String getToken() { return token; }
-        public void setToken(String t) { this.token = t; }
-    }
 
     public static class WebConfig {
         private String host = "0.0.0.0";
@@ -42,19 +35,6 @@ public class AppConfig {
             public int getTimeoutMinutes() { return timeoutMinutes; }
             public void setTimeoutMinutes(int t) { this.timeoutMinutes = t; }
         }
-    }
-
-    public static class AuthConfig {
-        private String passwordHashBcrypt;
-        private int maxFailedAttempts = 5;
-        private int lockMinutes = 15;
-
-        public String getPasswordHashBcrypt() { return passwordHashBcrypt; }
-        public void setPasswordHashBcrypt(String h) { this.passwordHashBcrypt = h; }
-        public int getMaxFailedAttempts() { return maxFailedAttempts; }
-        public void setMaxFailedAttempts(int n) { this.maxFailedAttempts = n; }
-        public int getLockMinutes() { return lockMinutes; }
-        public void setLockMinutes(int l) { this.lockMinutes = l; }
     }
 
     public static class DatabaseConfig {

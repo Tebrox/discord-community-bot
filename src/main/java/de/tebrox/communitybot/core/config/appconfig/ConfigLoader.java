@@ -35,7 +35,12 @@ public final class ConfigLoader {
         AppConfig config;
         try (InputStream is = Files.newInputStream(configPath)) {
             LoaderOptions opts = new LoaderOptions();
-            Yaml yaml = new Yaml(new Constructor(AppConfig.class, opts));
+            opts.setAllowDuplicateKeys(false);
+
+            Constructor constructor = new Constructor(AppConfig.class, opts);
+            constructor.getPropertyUtils().setSkipMissingProperties(true);
+
+            Yaml yaml = new Yaml(constructor);
             config = yaml.load(is);
         } catch (Exception e) {
             log.error("Failed to parse config.yml: {}", e.getMessage());
@@ -56,27 +61,16 @@ public final class ConfigLoader {
     private static void validateConfig(AppConfig config) {
         boolean valid = true;
 
-        String envToken = System.getenv("DISCORD_TOKEN");
-        String cfgToken = (config.getDiscord() != null) ? config.getDiscord().getToken() : null;
-        boolean hasToken = !isBlank(envToken) || !isBlank(cfgToken);
-        if (!hasToken) {
-            log.error("Discord token missing. Set DISCORD_TOKEN env var or discord.token in config.yml.");
-            valid = false;
-        } else if (!isBlank(envToken)) {
-            log.info("Discord token source: DISCORD_TOKEN environment variable");
-        } else {
-            log.info("Discord token source: config.yml");
-        }
-
-        if (config.getAuth() == null || isBlank(config.getAuth().getPasswordHashBcrypt())) {
-            log.error("config.yml: auth.passwordHashBcrypt is required");
-            valid = false;
-        }
 
         if (config.getDatabase() != null) {
             String dbType = config.getDatabase().getType();
             if (!"h2".equalsIgnoreCase(dbType) && !"mysql".equalsIgnoreCase(dbType)) {
                 log.error("config.yml: database.type must be 'h2' or 'mysql', got: {}", dbType);
+                valid = false;
+            }
+
+            if("mysql".equalsIgnoreCase(dbType) && config.getDatabase().getMysql() == null) {
+                log.error("config.yml: database.mysql is required wehn data.type=mysql");
                 valid = false;
             }
         }
@@ -97,22 +91,12 @@ public final class ConfigLoader {
                 # Edit all values before starting.
                 # Place this file next to CommunityBot.jar.
 
-                discord:
-                  # Leave token blank and set DISCORD_TOKEN env var instead (recommended).
-                  token: ""
-
                 web:
                   host: "127.0.0.1"
                   port: 8080
                   session:
                     secure: false
                     timeoutMinutes: 120
-
-                auth:
-                  # Generate hash: java -cp CommunityBot.jar de.tebrox.communitybot.util.PasswordHasher yourpassword
-                  passwordHashBcrypt: "<BCRYPT_HASH_OF_YOUR_PASSWORD>"
-                  maxFailedAttempts: 5
-                  lockMinutes: 15
 
                 database:
                   type: "h2"            # h2 | mysql
