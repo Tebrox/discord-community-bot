@@ -1,7 +1,7 @@
 package de.tebrox.communitybot.service;
 
-import de.tebrox.communitybot.service.LogBuffer;
-import de.tebrox.communitybot.service.LogBufferAppender;
+import de.tebrox.communitybot.core.logging.LogBuffer;
+import de.tebrox.communitybot.core.logging.LogBufferAppender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

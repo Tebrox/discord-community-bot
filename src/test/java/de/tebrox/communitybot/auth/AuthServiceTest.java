@@ -1,10 +1,10 @@
 package de.tebrox.communitybot.auth;
 
-import de.tebrox.communitybot.config.DashboardProperties;
-import de.tebrox.communitybot.persistence.entity.LoginAttempt;
-import de.tebrox.communitybot.repository.LoginAttemptRepository;
-import de.tebrox.communitybot.service.AuthService;
-import de.tebrox.communitybot.service.AuthService.AuthResult;
+import de.tebrox.communitybot.core.config.DashboardProperties;
+import de.tebrox.communitybot.core.persistence.entity.LoginAttempt;
+import de.tebrox.communitybot.core.persistence.repository.LoginAttemptRepository;
+import de.tebrox.communitybot.core.security.AuthService;
+import de.tebrox.communitybot.core.security.AuthService.AuthResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

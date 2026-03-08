@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <appender name="LOGBUFFER" class="de.tebrox.communitybot.service.LogBufferAppender"/>
+    <appender name="LOGBUFFER" class="de.tebrox.communitybot.core.logging.LogBufferAppender"/>
 
     <logger name="de.tebrox.communitybot" level="INFO"/>
     <logger name="net.dv8tion" level="WARN"/>

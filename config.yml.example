@@ -18,7 +18,7 @@ web:
     timeoutMinutes: 120
 
 auth:
-  # Hash erzeugen: java -cp CommunityBot.jar de.tebrox.communitybot.util.PasswordHasher DEIN_PASSWORT
+  # Hash erzeugen: java -cp CommunityBot.jar de.tebrox.communitybot.core.security.PasswordHasher DEIN_PASSWORT
   passwordHashBcrypt: "$2a$12$ERSETZE_MICH_MIT_ECHTEM_BCRYPT_HASH"
   maxFailedAttempts: 5
   lockMinutes: 15

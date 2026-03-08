@@ -1,8 +1,8 @@
 package de.tebrox.communitybot;
 
-import de.tebrox.communitybot.config.appconfig.AppConfig;
-import de.tebrox.communitybot.config.appconfig.AppConfigHolder;
-import de.tebrox.communitybot.config.appconfig.ConfigLoader;
+import de.tebrox.communitybot.core.config.appconfig.AppConfig;
+import de.tebrox.communitybot.core.config.appconfig.AppConfigHolder;
+import de.tebrox.communitybot.core.config.appconfig.ConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
