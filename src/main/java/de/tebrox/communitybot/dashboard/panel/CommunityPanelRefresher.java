@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
-public class LivePanelRefresher implements PanelRefresher {
+public class CommunityPanelRefresher implements PanelRefresher {
 
     private final JDA jda;
     private final PanelAdminListener panelAdminListener;
 
-    public LivePanelRefresher(@Qualifier("communityJda") JDA jda, PanelAdminListener panelAdminListener) {
+    public CommunityPanelRefresher(@Qualifier("communityJda") JDA jda, PanelAdminListener panelAdminListener) {
         this.jda = jda;
         this.panelAdminListener = panelAdminListener;
     }
