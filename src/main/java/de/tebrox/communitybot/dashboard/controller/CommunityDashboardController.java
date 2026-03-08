@@ -30,9 +30,9 @@ import java.util.concurrent.TimeoutException;
 
 @Controller
 @RequiredArgsConstructor
-public class DashboardController {
+public class CommunityDashboardController {
 
-    private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
+    private static final Logger log = LoggerFactory.getLogger(CommunityDashboardController.class);
 
     private final CommunityGuildConfigService configManager;
     private final WelcomeTrackingService welcomeTrackingService;
