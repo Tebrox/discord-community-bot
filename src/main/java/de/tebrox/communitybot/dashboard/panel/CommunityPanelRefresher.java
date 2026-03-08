@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix="discord.community", name="enabled", havingValue = "true", matchIfMissing = true)
 public class CommunityPanelRefresher implements PanelRefresher {
 
     private final JDA jda;

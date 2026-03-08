@@ -11,7 +11,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix="discord.community", name="enabled", havingValue = "true", matchIfMissing = true)
 public class DiscordListenerRegistrar {
 
     private static final Logger log = LoggerFactory.getLogger(DiscordListenerRegistrar.class);

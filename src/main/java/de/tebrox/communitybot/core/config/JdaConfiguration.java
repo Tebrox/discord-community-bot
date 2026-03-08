@@ -23,7 +23,6 @@ import org.springframework.context.event.EventListener;
 
 import java.util.EnumSet;
 
-@ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
 @Configuration
 @EnableConfigurationProperties({DiscordProperties.class, DashboardProperties.class})
 public class JdaConfiguration {

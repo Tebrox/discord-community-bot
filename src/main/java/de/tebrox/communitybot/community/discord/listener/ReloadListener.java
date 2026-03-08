@@ -14,7 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name="discord.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "discord.community", name="enabled", havingValue = "true", matchIfMissing = true)
 public class ReloadListener extends ListenerAdapter {
 
     private final CommunityGuildConfigService configManager;
