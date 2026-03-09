@@ -33,6 +33,9 @@
                 <a class="btn btn-primary" th:if="${canManageRoles}" th:href="@{'/guild/' + ${guildId} + '/roles'}">Rollen</a>
                 <a class="btn btn-secondary" th:if="${canManageWelcome}" th:href="@{'/guild/' + ${guildId} + '/welcome'}">Welcome</a>
                 <a class="btn btn-secondary" th:if="${canManageTickets}" th:href="@{'/guild/' + ${guildId} + '/tickets'}">Tickets</a>
+                <a class="btn btn-secondary"
+                   th:if="${canAdminGuild or canManageMessages}"
+                   th:href="@{'/guild/' + ${guildId} + '/messages'}">Nachrichten</a>
 
             </div>
         </section>

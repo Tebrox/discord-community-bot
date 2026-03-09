@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="'Nachrichten – ' + ${guildName} + ' – CommunityBot'">Nachrichten – CommunityBot</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header('guild', ${guildId}, ${guildName})}"></div>
+
+<main class="container">
+    <div class="breadcrumb">
+        <a th:href="@{'/guild/' + ${guildId}}">← <span th:text="${guildName}">Server</span></a>
+    </div>
+
+    <h2>Nachrichten-System</h2>
+    <p class="subtitle">
+        <span class="muted">Server:</span> <span th:text="${guildName}">Server</span>
+        <span class="muted">• Guild ID:</span> <code th:text="${guildId}">ID</code>
+    </p>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div id="messagePageState"
+         th:attr="data-selected-message-key=${selectedMessageKey}">
+    </div>
+
+    <section class="card">
+        <h3>Nachricht auswählen</h3>
+
+        <div class="form-group">
+            <label for="message-select">Nachricht</label>
+            <select id="message-select" class="form-input">
+                <option value="">Bitte auswählen</option>
+                <option th:each="entry : ${messageEntries}"
+                        th:value="${entry.key.name()}"
+                        th:text="${entry.category + ' – ' + entry.label}"
+                        th:selected="${selectedMessageKey != null and selectedMessageKey == entry.key.name()}">
+                    Nachricht
+                </option>
+            </select>
+        </div>
+    </section>
+
+    <section class="card message-editor-card"
+             th:each="entry : ${messageEntries}"
+             th:attr="data-message-key=${entry.key.name()},
+                      data-allow-content=${entry.allowContent},
+                      data-allow-embed=${entry.allowEmbed}"
+             style="display:none;">
+
+        <h3>
+            <span th:text="${entry.label}">Label</span>
+            <span class="muted">•</span>
+            <span class="muted" th:text="${entry.category}">Kategorie</span>
+        </h3>
+
+        <div class="muted" style="margin-bottom: 1rem;" th:if="${entry.custom}">
+            Für diese Nachricht existiert bereits eine Guild-spezifische Überschreibung.
+        </div>
+        <div class="muted" style="margin-bottom: 1rem;" th:if="${!entry.custom}">
+            Diese Nachricht verwendet aktuell noch den globalen Default.
+        </div>
+
+        <form th:action="@{'/guild/' + ${guildId} + '/messages/' + ${entry.key.name()} + '/save'}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="enabled" th:checked="${entry.enabled}"/>
+                    Nachricht aktiviert
+                </label>
+            </div>
+
+            <div class="message-content-fields" th:if="${entry.allowContent}">
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea name="content" rows="5" class="form-input" th:text="${entry.content}"></textarea>
+                </div>
+            </div>
+
+            <div class="message-embed-fields" th:if="${entry.allowEmbed}">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox"
+                               name="embedEnabled"
+                               class="embed-enabled-toggle"
+                               th:checked="${entry.embedEnabled}"/>
+                        Embed aktiviert
+                    </label>
+                </div>
+
+                <div class="embed-config-block">
+                    <div class="form-group">
+                        <label>Embed-Titel</label>
+                        <input type="text"
+                               name="embedTitle"
+                               class="form-input"
+                               th:value="${entry.embedTitle}"
+                               maxlength="256"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Embed-Beschreibung</label>
+                        <textarea name="embedDescription"
+                                  rows="6"
+                                  class="form-input"
+                                  maxlength="4096"
+                                  th:text="${entry.embedDescription}"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Embed-Footer</label>
+                        <input type="text"
+                               name="embedFooter"
+                               class="form-input"
+                               th:value="${entry.embedFooter}"
+                               maxlength="2048"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Embed-Farbe</label>
+                        <input type="text"
+                               name="embedColor"
+                               class="form-input"
+                               th:value="${entry.embedColor}"
+                               placeholder="#5865F2"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Thumbnail-URL</label>
+                        <input type="text"
+                               name="thumbnailUrl"
+                               class="form-input"
+                               th:value="${entry.thumbnailUrl}"
+                               maxlength="2048"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Image-URL</label>
+                        <input type="text"
+                               name="imageUrl"
+                               class="form-input"
+                               th:value="${entry.imageUrl}"
+                               maxlength="2048"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Verfügbare Platzhalter</label>
+                <div class="muted">
+                    <span th:each="ph, iter : ${entry.placeholders}">
+                        <code th:text="'{' + ph + '}'"></code><span th:if="${!iter.last}">, </span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Speichern</button>
+            </div>
+        </form>
+
+        <form th:action="@{'/guild/' + ${guildId} + '/messages/' + ${entry.key.name()} + '/reset'}"
+              method="post"
+              style="margin-top: 0.75rem;"
+              onsubmit="return confirm('Auf Default zurücksetzen?');">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-actions" style="justify-content:flex-start;">
+                <button class="btn btn-secondary" type="submit">Auf Default zurücksetzen</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script th:src="@{/js/messages.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

@@ -47,12 +47,14 @@ public class DashboardViewController {
         boolean canManageTickets = accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_TICKETS);
         boolean canViewLogs = accessService.hasGuildPermission(guildId, DashboardPermission.VIEW_LOGS);
         boolean canAdminGuild = accessService.hasGuildPermission(guildId, DashboardPermission.ADMIN_GUILD);
+        boolean canManageMessages = accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_MESSAGES);
 
         model.addAttribute("canManageRoles", canManageRoles);
         model.addAttribute("canManageWelcome", canManageWelcome);
         model.addAttribute("canManageTickets", canManageTickets);
         model.addAttribute("canViewLogs", canViewLogs);
         model.addAttribute("canAdminGuild", canAdminGuild);
+        model.addAttribute("canManageMessages", canManageMessages);
 
         model.addAttribute("guildId", guildId);
         model.addAttribute("guildName", guild.name());
