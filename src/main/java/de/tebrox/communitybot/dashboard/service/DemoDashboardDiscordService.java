@@ -12,7 +12,7 @@ public class DemoDashboardDiscordService implements DashboardDiscordService {
     public static final String DEMO_GUILD_ID = "123456789012345678";
 
     private final List<GuildInfo> guilds = List.of(
-            new GuildInfo(DEMO_GUILD_ID, "OBNL • Demo Guild", null, 42),
+            new GuildInfo(DEMO_GUILD_ID, "DEV • Demo Guild", null, 42),
             new GuildInfo("987654321098765432", "Test-Server", null, 7)
     );
 
