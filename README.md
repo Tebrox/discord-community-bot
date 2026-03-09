@@ -40,11 +40,7 @@ The architecture separates Discord logic, dashboard functionality and shared inf
 
 ## Dashboard
 
-Add screenshots of your dashboard here.
-
-```
-docs/screenshots/dashboard.png
-```
+<img src="docs/screenshots/dashboard.png" alt="Discord Community Bot Banner" width="100%">
 
 ## Ticket System
 
@@ -54,9 +50,7 @@ docs/screenshots/tickets.png
 
 ## Role Panels
 
-```
-docs/screenshots/rolepanel.png
-```
+<img src="docs/screenshots/rolepanel.png" alt="Discord Community Bot Banner" width="100%">
 
 ---
 
@@ -374,13 +368,7 @@ The modular architecture allows additional modules such as:
 
 # License
 
-Add your preferred license here.
-
-Example:
-
-```
-MIT License
-```
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ---
 
