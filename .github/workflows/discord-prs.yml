@@ -1,0 +1,104 @@
+name: Discord Pull Requests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - closed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+
+    steps:
+      - name: Build Discord payload
+        id: payload
+        env:
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_STATE: ${{ github.event.action }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_PRS }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "Missing DISCORD_WEBHOOK_PRS secret"
+            exit 1
+          fi
+
+          repo_url="https://github.com/$REPO"
+          repo_link="[$REPO]($repo_url)"
+          repo_icon="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+
+          case "$PR_STATE" in
+            opened)
+              status="Opened"
+              color=3447003
+              ;;
+            reopened)
+              status="Reopened"
+              color=3447003
+              ;;
+            ready_for_review)
+              status="Ready for Review"
+              color=15844367
+              ;;
+            closed)
+              if [ "$PR_MERGED" = "true" ]; then
+                status="Merged"
+                color=3066993
+              else
+                status="Closed"
+                color=9807270
+              fi
+              ;;
+            *)
+              status="$PR_STATE"
+              color=5814783
+              ;;
+          esac
+
+          title="$REPO_NAME — PR #$PR_NUMBER"
+          description="[$PR_TITLE]($PR_URL)"
+
+          payload=$(jq -n             --arg title "$title"             --arg description "$description"             --arg repo "$repo_link"             --arg repoIcon "$repo_icon"             --arg state "$status"             --arg author "$PR_AUTHOR"             --arg base "$PR_BASE"             --arg head "$PR_HEAD"             --arg url "$PR_URL"             --argjson color "$color"             '{
+              username: "GitHub",
+              embeds: [
+                {
+                  title: $title,
+                  url: $url,
+                  description: $description,
+                  color: $color,
+                  thumbnail: { url: $repoIcon },
+                  fields: [
+                    { name: "Repository", value: $repo, inline: true },
+                    { name: "Status", value: $state, inline: true },
+                    { name: "Author", value: $author, inline: true },
+                    { name: "From", value: $head, inline: true },
+                    { name: "To", value: $base, inline: true }
+                  ],
+                  footer: { text: "GitHub Pull Request Update" }
+                }
+              ]
+            }')
+
+          echo "payload<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$payload" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Send to Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_PRS }}
+          PAYLOAD: ${{ steps.payload.outputs.payload }}
+        run: |
+          curl -fsS -H "Content-Type: application/json"             -d "$PAYLOAD"             "$WEBHOOK_URL"

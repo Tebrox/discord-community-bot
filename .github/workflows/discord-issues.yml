@@ -1,0 +1,89 @@
+name: Discord Issues
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - closed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      contents: read
+
+    steps:
+      - name: Build Discord payload
+        id: payload
+        env:
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_STATE: ${{ github.event.action }}
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_ISSUES }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "Missing DISCORD_WEBHOOK_ISSUES secret"
+            exit 1
+          fi
+
+          repo_url="https://github.com/$REPO"
+          repo_link="[$REPO]($repo_url)"
+          repo_icon="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+
+          case "$ISSUE_STATE" in
+            opened)
+              status="Opened"
+              color=3447003
+              ;;
+            reopened)
+              status="Reopened"
+              color=15844367
+              ;;
+            closed)
+              status="Closed"
+              color=9807270
+              ;;
+            *)
+              status="$ISSUE_STATE"
+              color=5814783
+              ;;
+          esac
+
+          title="$REPO_NAME — Issue #$ISSUE_NUMBER"
+          description="[$ISSUE_TITLE]($ISSUE_URL)"
+
+          payload=$(jq -n             --arg title "$title"             --arg description "$description"             --arg repo "$repo_link"             --arg repoIcon "$repo_icon"             --arg state "$status"             --arg author "$ISSUE_AUTHOR"             --arg url "$ISSUE_URL"             --argjson color "$color"             '{
+              username: "GitHub",
+              embeds: [
+                {
+                  title: $title,
+                  url: $url,
+                  description: $description,
+                  color: $color,
+                  thumbnail: { url: $repoIcon },
+                  fields: [
+                    { name: "Repository", value: $repo, inline: true },
+                    { name: "Status", value: $state, inline: true },
+                    { name: "Author", value: $author, inline: true }
+                  ],
+                  footer: { text: "GitHub Issue Update" }
+                }
+              ]
+            }')
+
+          echo "payload<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$payload" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Send to Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_ISSUES }}
+          PAYLOAD: ${{ steps.payload.outputs.payload }}
+        run: |
+          curl -fsS -H "Content-Type: application/json"             -d "$PAYLOAD"             "$WEBHOOK_URL"
