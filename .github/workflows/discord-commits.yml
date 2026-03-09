@@ -1,0 +1,111 @@
+name: Discord Commits
+
+on:
+  push:
+    branches:
+      - master
+      - development
+      - '!feature/**'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Build Discord payload
+        id: payload
+        env:
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          COMPARE_URL: ${{ github.event.compare }}
+          COMMITS_JSON: ${{ toJson(github.event.commits) }}
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_COMMITS }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "Missing DISCORD_WEBHOOK_COMMITS secret"
+            exit 1
+          fi
+
+          if [ "$BRANCH" = "master" ]; then
+            branch_label="stable"
+            color=3066993
+          elif [ "$BRANCH" = "development" ]; then
+            branch_label="development"
+            color=16098851
+          else
+            branch_label="$BRANCH"
+            color=5814783
+          fi
+
+          commit_count=$(jq 'length' <<< "$COMMITS_JSON")
+
+          if [ "$commit_count" -eq 1 ]; then
+            title="$REPO_NAME — New Commit"
+            description=$(jq -r '
+              .[0] |
+              .message |= (split("\n")[0] | if length > 100 then .[0:97] + "..." else . end) |
+              "[\(.id[0:7])](\(.url)) \(.message) — **\(.author.name)**"
+            ' <<< "$COMMITS_JSON")
+          else
+            title="$REPO_NAME — New Push ($commit_count commits)"
+            description=$(jq -r '
+              def shortmsg:
+                split("\n")[0] | if length > 100 then .[0:97] + "..." else . end;
+
+              if length > 10 then
+                (.[0:10]
+                  | map("[\(.id[0:7])](\(.url)) \(.message | shortmsg) — **\(.author.name)**")
+                  | join("\n"))
+                + "\n\n…and "
+                + ((length - 10) | tostring)
+                + " more commit(s)"
+              else
+                map("[\(.id[0:7])](\(.url)) \(.message | shortmsg) — **\(.author.name)**")
+                | join("\n")
+              end
+            ' <<< "$COMMITS_JSON")
+          fi
+
+          payload=$(jq -n \
+            --arg title "$title" \
+            --arg description "$description" \
+            --arg repo "$REPO" \
+            --arg branch "$BRANCH" \
+            --arg branchLabel "$branch_label" \
+            --arg actor "$ACTOR" \
+            --arg url "$COMPARE_URL" \
+            --argjson color "$color" \
+            '{
+              username: "GitHub Commits",
+              embeds: [
+                {
+                  title: $title,
+                  url: $url,
+                  description: $description,
+                  color: $color,
+                  fields: [
+                    { name: "Repository", value: $repo, inline: true },
+                    { name: "Branch", value: $branch, inline: true },
+                    { name: "Channel", value: $branchLabel, inline: true },
+                    { name: "Pushed by", value: $actor, inline: true }
+                  ]
+                }
+              ]
+            }')
+
+          echo "payload<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$payload" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Send to Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_COMMITS }}
+          PAYLOAD: ${{ steps.payload.outputs.payload }}
+        run: |
+          curl -fsS -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "$WEBHOOK_URL"
