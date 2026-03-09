@@ -3,6 +3,7 @@ package de.tebrox.communitybot.ticket.web.controller;
 import de.tebrox.communitybot.core.access.DashboardAccessService;
 import de.tebrox.communitybot.core.security.DashboardPermission;
 import de.tebrox.communitybot.core.util.SnowflakeValidator;
+import de.tebrox.communitybot.dashboard.runtime.TicketDashboardRuntimeGateway;
 import de.tebrox.communitybot.ticket.persistence.entity.TicketGuildConfig;
 import de.tebrox.communitybot.ticket.service.TicketGuildConfigService;
 import de.tebrox.communitybot.ticket.service.TicketService;
@@ -21,24 +22,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@ConditionalOnProperty(prefix = "discord.ticket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class TicketApiController {
 
     private final DashboardAccessService accessService;
     private final TicketGuildConfigService ticketGuildConfigService;
-    private final TicketService ticketService;
-    private final JDA ticketJda;
+    private final TicketDashboardRuntimeGateway ticketRuntimeGateway;
 
     public TicketApiController(
             DashboardAccessService accessService,
             TicketGuildConfigService ticketGuildConfigService,
-            TicketService ticketService,
-            @Qualifier("ticketJda") JDA ticketJda
+            TicketDashboardRuntimeGateway ticketRuntimeGateway
     ) {
         this.accessService = accessService;
         this.ticketGuildConfigService = ticketGuildConfigService;
-        this.ticketService = ticketService;
-        this.ticketJda = ticketJda;
+        this.ticketRuntimeGateway = ticketRuntimeGateway;
     }
 
     @PostMapping("/guild/{guildId}/tickets/save")
@@ -102,26 +99,27 @@ public class TicketApiController {
             return "redirect:/?forbidden";
         }
 
-        Guild guild = ticketJda.getGuildById(guildId);
-        if (guild == null) {
-            return "redirect:/guild/" + guildId + "/tickets?botMissing";
-        }
-
-        TextChannel targetChannel = null;
-        if (channelId != null && !channelId.isBlank()) {
-            targetChannel = guild.getTextChannelById(channelId);
-        } else {
+        String targetChannelId = channelId;
+        if(targetChannelId == null || targetChannelId.isBlank()) {
             var cfgOpt = ticketGuildConfigService.findByGuildId(guildId);
-            if (cfgOpt.isPresent() && cfgOpt.get().getTicketChannelId() != null) {
-                targetChannel = guild.getTextChannelById(cfgOpt.get().getTicketChannelId());
+            if(cfgOpt.isPresent()) {
+                targetChannelId = cfgOpt.get().getTicketChannelId();
             }
         }
 
-        if (targetChannel == null) {
+        if (targetChannelId == null || targetChannelId.isBlank()) {
             return "redirect:/guild/" + guildId + "/tickets?missingChannel";
         }
 
-        ticketService.postTicketPanel(guild, targetChannel, true);
+        if (!ticketRuntimeGateway.isAvailableForGuild(guildId)) {
+            return "redirect:/guild/" + guildId + "/tickets?botMissing";
+        }
+
+        if (!ticketRuntimeGateway.canAccessTextChannel(guildId, targetChannelId)) {
+            return "redirect:/guild/" + guildId + "/tickets?missingChannel";
+        }
+
+        ticketRuntimeGateway.repostPanel(guildId, targetChannelId);
         return "redirect:/guild/" + guildId + "/tickets?reposted";
     }
 
@@ -137,17 +135,15 @@ public class TicketApiController {
             return "redirect:/?forbidden";
         }
 
-        Guild guild = ticketJda.getGuildById(guildId);
-        if (guild == null) {
+        if (!ticketRuntimeGateway.isAvailableForGuild(guildId)) {
             return "redirect:/guild/" + guildId + "/tickets?botMissing";
         }
 
-        TextChannel targetChannel = guild.getTextChannelById(channelId);
-        if (targetChannel == null) {
+        if (!ticketRuntimeGateway.canAccessTextChannel(guildId, channelId)) {
             return "redirect:/guild/" + guildId + "/tickets?missingChannel";
         }
 
-        ticketService.postTicketPanel(guild, targetChannel, false);
+        ticketRuntimeGateway.postTestPanel(guildId, channelId);
         return "redirect:/guild/" + guildId + "/tickets?tested";
     }
 

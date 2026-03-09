@@ -33,25 +33,20 @@ public class CommunityBotApplication {
         Map<String, Object> props = new HashMap<>();
 
         if (cfg.getWeb() != null) {
-            props.put("server.port", cfg.getWeb().getPort());
-            props.put("server.address", cfg.getWeb().getHost());
+            if(cfg.getWeb().getPort() > 0) {
+                props.put("server.port", cfg.getWeb().getPort());
+            }
+
+            if(cfg.getWeb().getHost() != null && !cfg.getWeb().getHost().isBlank()) {
+                props.put("server.address", cfg.getWeb().getHost());
+            }
+
             if (cfg.getWeb().getSession() != null) {
                 props.put("server.servlet.session.cookie.secure", cfg.getWeb().getSession().isSecure());
                 props.put("server.servlet.session.timeout", cfg.getWeb().getSession().getTimeoutMinutes() + "m");
+                props.put("server.servlet.session.cookie.http-only", true);
+                props.put("server.servlet.session.cookie.same-site", "lax");
             }
-        }
-
-        String envToken = System.getenv("DISCORD_TOKEN");
-        String cfgToken = (cfg.getDiscord() != null) ? cfg.getDiscord().getToken() : null;
-        String token = (envToken != null && !envToken.isBlank()) ? envToken : cfgToken;
-        if (token != null && !token.isBlank()) {
-            props.put("discord.token", token);
-        }
-
-        if (cfg.getAuth() != null) {
-            props.put("dashboard.password-hash", cfg.getAuth().getPasswordHashBcrypt());
-            props.put("dashboard.max-login-attempts", cfg.getAuth().getMaxFailedAttempts());
-            props.put("dashboard.lockout-duration-minutes", cfg.getAuth().getLockMinutes());
         }
 
         if (cfg.getDatabase() != null) {

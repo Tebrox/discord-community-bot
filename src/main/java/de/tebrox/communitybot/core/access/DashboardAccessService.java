@@ -43,6 +43,10 @@ public class DashboardAccessService {
     }
 
     public boolean canAccessDashboard() {
+        if(securityService.isDemoMode()) {
+            return true;
+        }
+
         if (isSuperadmin()) {
             return true;
         }
@@ -52,6 +56,10 @@ public class DashboardAccessService {
     }
 
     public boolean hasGuildPermission(String guildId, DashboardPermission permission) {
+        if(securityService.isDemoMode()) {
+            return true;
+        }
+
         if (isSuperadmin()) {
             return true;
         }

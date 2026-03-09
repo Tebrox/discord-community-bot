@@ -81,10 +81,6 @@ public final class ConfigLoader {
         }
     }
 
-    private static boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
     private static void writeTemplate(Path path) {
         String template = """
                 # CommunityBot v4 – config.yml

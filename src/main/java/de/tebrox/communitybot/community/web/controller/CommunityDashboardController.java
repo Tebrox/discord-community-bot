@@ -9,8 +9,8 @@ import de.tebrox.communitybot.core.security.DashboardPermission;
 import de.tebrox.communitybot.core.access.DashboardAccessService;
 import de.tebrox.communitybot.community.service.WelcomeTrackingService;
 import de.tebrox.communitybot.core.util.SnowflakeValidator;
+import de.tebrox.communitybot.dashboard.runtime.CommunityDashboardRuntimeGateway;
 import de.tebrox.communitybot.dashboard.service.DashboardDiscordService;
-import de.tebrox.communitybot.dashboard.panel.PanelRefresher;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -37,7 +37,7 @@ public class CommunityDashboardController {
     private final CommunityGuildConfigService configManager;
     private final WelcomeTrackingService welcomeTrackingService;
     private final DashboardDiscordService discord;
-    private final PanelRefresher panelRefresher;
+    private final CommunityDashboardRuntimeGateway runtimeGateway;
 
     private final ObjectMapper objectMapper;
 
@@ -490,7 +490,7 @@ public class CommunityDashboardController {
     private void refreshPanel(String guildId) {
         CommunityGuildConfig cfg = configManager.getConfig(guildId);
         if (cfg != null) {
-            panelRefresher.refresh(guildId, cfg);
+            runtimeGateway.refreshRolePanel(guildId, cfg);
         }
     }
 }

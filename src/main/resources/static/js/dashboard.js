@@ -23,7 +23,7 @@
     for (const g of guilds) {
       const a = document.createElement('a');
       a.className = 'guild-card';
-      a.href = '/dashboard/' + g.id;
+      a.href = '/guild/' + g.id;
 
       const icon = document.createElement('div');
       icon.className = 'guild-icon';

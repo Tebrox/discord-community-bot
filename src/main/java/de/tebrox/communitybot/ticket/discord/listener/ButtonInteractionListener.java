@@ -3,9 +3,11 @@ package de.tebrox.communitybot.ticket.discord.listener;
 import de.tebrox.communitybot.ticket.discord.buttons.TicketButtonHandler;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(prefix = "discord.ticket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ButtonInteractionListener extends ListenerAdapter {
 
     private final TicketButtonHandler ticketButtonHandler;

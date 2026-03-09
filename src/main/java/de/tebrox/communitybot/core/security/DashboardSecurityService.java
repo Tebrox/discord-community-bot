@@ -16,7 +16,18 @@ public class DashboardSecurityService {
         this.dashboardProperties = dashboardProperties;
     }
 
+    public boolean isDemoMode() {
+        return dashboardProperties.demo();
+    }
+
     public String getCurrentDiscordId() {
+        if (isDemoMode()) {
+            return dashboardProperties.superadminDiscordId() != null
+                    && !dashboardProperties.superadminDiscordId().isBlank()
+                    ? dashboardProperties.superadminDiscordId()
+                    : "dev-superadmin";
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof OAuth2AuthenticationToken oauth)) {
             return null;
@@ -32,6 +43,10 @@ public class DashboardSecurityService {
     }
 
     public String getCurrentUsername() {
+        if (isDemoMode()) {
+            return "Local Dev";
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof OAuth2AuthenticationToken oauth)) {
             return null;

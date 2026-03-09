@@ -2,8 +2,10 @@ package de.tebrox.communitybot.core.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,6 +36,35 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    @ConditionalOnProperty(name = "dashboard.demo", havingValue = "true")
+    public SecurityFilterChain demoFilterChain(HttpSecurity http) throws Exception {
+        CookieCsrfTokenRepository csrfRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
+        csrfHandler.setCsrfRequestAttributeName("_csrf");
+
+        http
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfRepo)
+                        .csrfTokenRequestHandler(csrfHandler)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/favicon.ico",
+                                "/favicon-16x16.png",
+                                "/favicon-32x32.png"
+                        ).permitAll()
+                        .anyRequest().permitAll()
+                )
+                .logout(logout -> logout.disable());
+
+        return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "dashboard.demo", havingValue = "false", matchIfMissing = true)
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             DashboardOAuth2LoginSuccessHandler successHandler
