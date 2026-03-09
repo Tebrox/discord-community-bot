@@ -45,6 +45,24 @@
             <button type="submit" class="btn btn-secondary">Abmelden</button>
         </form>
     </div>
+
+    <div class="guild-subnav" th:if="${guildId != null and guildSubNavVisible}">
+        <div class="guild-subnav-inner">
+            <a th:href="@{'/guild/' + ${guildId}}"
+               class="guild-subnav-link"
+               th:classappend="${guildSubNavActive == 'overview'} ? ' active' : ''">
+                Übersicht
+            </a>
+
+            <a th:each="item : ${guildSubNavItems}"
+               th:href="${item.href}"
+               class="guild-subnav-link"
+               th:classappend="${guildSubNavActive == item.key} ? ' active' : ''"
+               th:text="${item.label}">
+                Modul
+            </a>
+        </div>
+    </div>
 </header>
 </body>
 </html>
