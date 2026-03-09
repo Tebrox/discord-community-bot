@@ -12,7 +12,7 @@
     <div th:replace="~{fragments/header :: header('guild', ${guildId}, ${guildName})}"></div>
 
     <main class="container">
-        <div class="breadcrumb"><a th:href="@{'/dashboard/' + ${guildId}}">← <span th:text="${guildName}"></span></a></div>
+        <div class="breadcrumb"><a th:href="@{'/guild/' + ${guildId}}">← <span th:text="${guildName}"></span></a></div>
         <h2>Rollen-Panel</h2>
         <p class="subtitle">
             <span class="muted">Server:</span> <span th:text="${guildName}">Server</span>
