@@ -368,7 +368,7 @@ The modular architecture allows additional modules such as:
 
 # License
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Licence: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ---
 
