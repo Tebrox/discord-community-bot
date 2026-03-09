@@ -190,30 +190,6 @@ public class CommunityDashboardController {
         return "redirect:/guild/" + guildId + "/roles";
     }
 
-    @PostMapping("/guild/{guildId}/roles/save-title")
-    public String savePanelTitle(@PathVariable String guildId,
-                                 @RequestParam String title,
-                                 RedirectAttributes ra) {
-        SnowflakeValidator.validate(guildId, "guildId");
-
-        if(!accessService.hasGuildPermission(guildId, DashboardPermission.MANAGE_ROLES)) {
-            return "redirect:/?forbidden";
-        }
-
-
-        try {
-            CommunityGuildConfig cfg = deepCopy(guildId);
-            if (cfg == null) return "redirect:/";
-            cfg.getPanel().setTitle(title);
-            configManager.saveGuildConfig(guildId, cfg);
-            refreshPanel(guildId);
-            ra.addFlashAttribute("success", "Panel-Titel gespeichert.");
-        } catch (IOException e) {
-            ra.addFlashAttribute("error", "Speichern fehlgeschlagen: " + e.getMessage());
-        }
-        return "redirect:/guild/" + guildId + "/roles";
-    }
-
     @PostMapping("/guild/{guildId}/roles/save-status-button")
     public String saveStatusButton(@PathVariable String guildId,
                                    @RequestParam String id,
@@ -373,12 +349,6 @@ public class CommunityDashboardController {
                               @RequestParam(required = false) String enabled,
                               @RequestParam(required = false) String channelId,
                               @RequestParam(defaultValue = "0") int deleteAfterSeconds,
-                              @RequestParam(required = false) String embedEnabled,
-                              @RequestParam(required = false) String embedTitle,
-                              @RequestParam(required = false) String embedDescription,
-                              @RequestParam(required = false, defaultValue = "#5865F2") String embedColor,
-                              @RequestParam(required = false) String embedFooter,
-                              @RequestParam(required = false) String embedAvatar,
                               RedirectAttributes ra) {
         SnowflakeValidator.validate(guildId, "guildId");
 
@@ -393,12 +363,6 @@ public class CommunityDashboardController {
             cfg.getWelcome().setEnabled("on".equals(enabled) || "true".equals(enabled));
             cfg.getWelcome().setChannelId(channelId != null ? channelId.trim() : "");
             cfg.getWelcome().setDeleteAfterSeconds(Math.max(0, deleteAfterSeconds));
-            cfg.getWelcome().getEmbed().setEnabled("on".equals(embedEnabled) || "true".equals(embedEnabled));
-            if (embedTitle != null) cfg.getWelcome().getEmbed().setTitle(embedTitle.trim());
-            if (embedDescription != null) cfg.getWelcome().getEmbed().setDescription(embedDescription.trim());
-            if (embedFooter != null) cfg.getWelcome().getEmbed().setFooter(embedFooter.trim());
-            if (embedAvatar != null) cfg.getWelcome().getEmbed().setThumbnail(embedAvatar.trim());
-            cfg.getWelcome().getEmbed().setColor(embedColor);
 
             configManager.saveGuildConfig(guildId, cfg);
             ra.addFlashAttribute("success", "Welcome-Einstellungen gespeichert.");

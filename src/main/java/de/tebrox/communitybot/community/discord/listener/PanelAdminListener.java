@@ -6,6 +6,9 @@ import de.tebrox.communitybot.community.discord.commands.PanelBuilder;
 import de.tebrox.communitybot.community.persistence.entity.PanelState;
 import de.tebrox.communitybot.core.logging.LogBuffer;
 import de.tebrox.communitybot.community.service.PanelService;
+import de.tebrox.communitybot.core.message.MessageKey;
+import de.tebrox.communitybot.core.message.service.GuildMessageService;
+import de.tebrox.communitybot.core.message.service.ResolvedMessage;
 import de.tebrox.communitybot.core.util.ChannelGuard;
 import de.tebrox.communitybot.core.access.PermissionGuard;
 import de.tebrox.communitybot.core.util.RolesSafetyChecker;
@@ -21,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -31,11 +35,13 @@ public class PanelAdminListener extends ListenerAdapter {
     private final CommunityGuildConfigService configManager;
     private final PanelService panelService;
     private final LogBuffer logBuffer;
+    private final GuildMessageService guildMessageService;
 
-    public PanelAdminListener(CommunityGuildConfigService configManager, PanelService panelService, LogBuffer logBuffer) {
+    public PanelAdminListener(CommunityGuildConfigService configManager, PanelService panelService, LogBuffer logBuffer, GuildMessageService guildMessageService) {
         this.configManager = configManager;
         this.panelService = panelService;
         this.logBuffer = logBuffer;
+        this.guildMessageService = guildMessageService;
     }
 
     @Override
@@ -73,7 +79,8 @@ public class PanelAdminListener extends ListenerAdapter {
 
         Member selfMember = guild.getSelfMember();
         String safetyReport = RolesSafetyChecker.buildReport(guild, selfMember, cfg);
-        MessageEmbed embed = PanelBuilder.buildEmbed(cfg);
+        ResolvedMessage panelMessage = guildMessageService.resolve(guildId, MessageKey.ROLE_PANEL, Map.of());
+        MessageEmbed embed = PanelBuilder.buildEmbed(cfg, panelMessage);
         List<ActionRow> rows = PanelBuilder.buildActionRows(cfg);
 
         Optional<PanelState> stateOpt = panelService.findState(guildId);
@@ -165,7 +172,8 @@ public class PanelAdminListener extends ListenerAdapter {
         TextChannel ch = guild.getTextChannelById(state.getChannelId());
         if (ch == null) return;
 
-        MessageEmbed embed = PanelBuilder.buildEmbed(cfg);
+        ResolvedMessage message = guildMessageService.resolve(guildId, MessageKey.ROLE_PANEL, Map.of());
+        MessageEmbed embed = PanelBuilder.buildEmbed(cfg, message);
         List<ActionRow> rows = PanelBuilder.buildActionRows(cfg);
 
         ch.retrieveMessageById(state.getMessageId()).queue(

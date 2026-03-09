@@ -2,6 +2,7 @@ package de.tebrox.communitybot.dashboard.runtime;
 
 import de.tebrox.communitybot.community.config.CommunityGuildConfig;
 import de.tebrox.communitybot.community.discord.listener.PanelAdminListener;
+import de.tebrox.communitybot.core.message.service.ResolvedMessage;
 import net.dv8tion.jda.api.JDA;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

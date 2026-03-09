@@ -43,8 +43,6 @@ public class TicketApiController {
             @PathVariable String guildId,
             @RequestParam(required = false) String ticketChannelId,
             @RequestParam(required = false) String logChannelId,
-            @RequestParam(required = false) String embedTitle,
-            @RequestParam(required = false) String embedDescription,
             @RequestParam(required = false) TicketGuildConfig.ThreadType threadType,
             @RequestParam(required = false, name = "supportRoleIds") List<String> supportRoleIds,
             @RequestParam(required = false, name = "categoryLabels") List<String> categoryLabels,
@@ -73,8 +71,6 @@ public class TicketApiController {
         TicketGuildConfigUpdateRequest request = new TicketGuildConfigUpdateRequest(
                 emptyToNull(ticketChannelId),
                 emptyToNull(logChannelId),
-                emptyToNull(embedTitle),
-                emptyToNull(embedDescription),
                 threadType,
                 supportRoleIds == null ? List.of() : supportRoleIds,
                 categories

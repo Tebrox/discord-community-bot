@@ -1,5 +1,9 @@
 package de.tebrox.communitybot.ticket.service;
 
+import de.tebrox.communitybot.community.discord.commands.PanelBuilder;
+import de.tebrox.communitybot.core.message.MessageKey;
+import de.tebrox.communitybot.core.message.service.GuildMessageService;
+import de.tebrox.communitybot.core.message.service.ResolvedMessage;
 import de.tebrox.communitybot.ticket.persistence.entity.Ticket;
 import de.tebrox.communitybot.ticket.persistence.entity.TicketGuildConfig;
 import de.tebrox.communitybot.ticket.persistence.repository.TicketRepository;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.awt.Color;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -30,15 +35,17 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketGuildConfigService ticketGuildConfigService;
     private final JDA ticketJda;
+    private final GuildMessageService guildMessageService;
 
     public TicketService(
             TicketRepository ticketRepository,
             TicketGuildConfigService ticketGuildConfigService,
-            @Qualifier("ticketJda") JDA ticketJda
+            @Qualifier("ticketJda") JDA ticketJda, GuildMessageService guildMessageService
     ) {
         this.ticketRepository = ticketRepository;
         this.ticketGuildConfigService = ticketGuildConfigService;
         this.ticketJda = ticketJda;
+        this.guildMessageService = guildMessageService;
     }
 
     @Transactional
@@ -49,12 +56,14 @@ public class TicketService {
             channel.deleteMessageById(config.getTicketMessageId()).queue(null, ignored -> {});
         }
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle(config.getEmbedTitle())
-                .setDescription(config.getEmbedDescription())
-                .setColor(Color.decode("#5865F2"));
+        ResolvedMessage panelMessage = guildMessageService.resolve(guild.getId(), MessageKey.TICKET_PANEL, Map.of());
 
-        MessageCreateBuilder builder = new MessageCreateBuilder().setEmbeds(embed.build());
+        MessageCreateBuilder builder = new MessageCreateBuilder();
+        if(panelMessage.isEmbedEnabled()) {
+            builder.setEmbeds(PanelBuilder.buildEmbed(panelMessage).build());
+        } else if(panelMessage.getContent() != null && !panelMessage.getContent().isBlank()) {
+            builder.setContent(panelMessage.getContent());
+        }
 
         List<TicketGuildConfig.TicketCategory> categories = config.getCategories();
         if (categories.isEmpty()) {
@@ -119,11 +128,12 @@ public class TicketService {
         boolean privateThread = config.getThreadType() == TicketGuildConfig.ThreadType.PRIVATE_THREAD
                 && parentChannel.getType() == ChannelType.TEXT;
 
-        StringBuilder mentions = new StringBuilder(member.getAsMention());
+        StringBuilder supportRolesBuilder = new StringBuilder();
         for (String roleId : config.getSupportRoleIds()) {
             Role role = guild.getRoleById(roleId);
             if (role != null && !role.isPublicRole()) {
-                mentions.append(" ").append(role.getAsMention());
+                if(!supportRolesBuilder.isEmpty()) supportRolesBuilder.append(" ");
+                supportRolesBuilder.append(role.getAsMention());
             }
         }
 
@@ -138,16 +148,23 @@ public class TicketService {
             ticket.setCategory(category);
             ticketRepository.save(ticket);
 
-            EmbedBuilder embed = new EmbedBuilder()
-                    .setTitle("Ticket #" + shortId)
-                    .setDescription("Bitte beschreibe hier dein Anliegen.")
-                    .setColor(Color.GREEN)
-                    .setTimestamp(Instant.now());
+            ResolvedMessage threadMessage = guildMessageService.resolve(
+                    guild.getId(),
+                    MessageKey.TICKET_THREAD_OPENED,
+                    Map.of(
+                            "ticketId", shortId,
+                            "user", member.getUser().getName(),
+                            "mention", member.getAsMention(),
+                            "category", category == null ? "default" : category,
+                            "supportRoles", supportRolesBuilder.toString().trim()
+                    )
+            );
 
-            thread.sendMessage(mentions.toString())
-                    .setEmbeds(embed.build())
-                    .addActionRow(Button.danger("ticket:close:" + thread.getId(), "🔒 Ticket schließen"))
-                    .queue();
+            var sendAction = thread.sendMessage(threadMessage.getContent() == null ? "" : threadMessage.getContent());
+            if(threadMessage.isEmbedEnabled()) {
+                sendAction.setEmbeds(PanelBuilder.buildEmbed(threadMessage).build());
+            }
+            sendAction.addActionRow(Button.danger("ticket:close:" + thread.getId(), "🔒 Ticket schließen")).queue();
 
             String url = "https://discord.com/channels/" + guild.getId() + "/" + thread.getId();
             onCreatedLink.accept(url);

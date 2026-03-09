@@ -73,24 +73,6 @@
       </div>
 
       <div class="form-group">
-        <label for="embedTitle">Embed-Titel</label>
-        <input id="embedTitle"
-               name="embedTitle"
-               type="text"
-               maxlength="256"
-               th:value="${ticketCfg.embedTitle}">
-      </div>
-
-      <div class="form-group">
-        <label for="embedDescription">Embed-Beschreibung</label>
-        <textarea id="embedDescription"
-                  name="embedDescription"
-                  rows="5"
-                  maxlength="4096"
-                  th:text="${ticketCfg.embedDescription}"></textarea>
-      </div>
-
-      <div class="form-group">
         <label for="supportRoleIds">Support-Rollen</label>
         <select id="supportRoleIds" name="supportRoleIds" multiple size="8">
           <option th:each="role : ${roles}"

@@ -7,8 +7,6 @@ import java.util.List;
 public record TicketGuildConfigUpdateRequest(
         String ticketChannelId,
         String logChannelId,
-        String embedTitle,
-        String embedDescription,
         TicketGuildConfig.ThreadType threadType,
         List<String> supportRoleIds,
         List<CategoryDto> categories

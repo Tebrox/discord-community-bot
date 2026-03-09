@@ -2,6 +2,7 @@ package de.tebrox.communitybot.community.discord.commands;
 
 import de.tebrox.communitybot.community.config.CommunityGuildConfig;
 import de.tebrox.communitybot.community.discord.buttons.ButtonFactory;
+import de.tebrox.communitybot.core.message.service.ResolvedMessage;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -16,13 +17,25 @@ public final class PanelBuilder {
 
     private PanelBuilder() {}
 
-    public static MessageEmbed buildEmbed(CommunityGuildConfig cfg) {
+    public static MessageEmbed buildEmbed(CommunityGuildConfig cfg, ResolvedMessage message) {
+        return buildEmbed(message).build();
+    }
+
+    public static EmbedBuilder buildEmbed(ResolvedMessage message) {
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle(cfg.getPanel().getTitle());
-        eb.setColor(new Color(0x5865F2));
-        eb.setDescription("Wähle aus, für welche Themen du erwähnt werden möchtest.\n" +
-                "Du erhältst nur die Benachrichtigungen, die du hier aktivierst.");
-        return eb.build();
+        if(message.getEmbedTitle() != null && !message.getEmbedTitle().isBlank()) eb.setTitle(message.getEmbedTitle());
+        if(message.getEmbedDescription() != null && !message.getEmbedDescription().isBlank()) eb.setDescription(message.getEmbedDescription());
+        if(message.getEmbedFooter() != null && !message.getEmbedFooter().isBlank()) eb.setFooter(message.getEmbedFooter());
+        if(message.getThumbnailUrl() != null && !message.getThumbnailUrl().isBlank() && message.getThumbnailUrl().startsWith("http")) eb.setThumbnail(message.getThumbnailUrl());
+        if(message.getImageUrl() != null && !message.getImageUrl().isBlank() && message.getImageUrl().startsWith("http")) eb.setImage(message.getImageUrl());
+
+        try {
+            eb.setColor(Color.decode(message.getEmbedColor() != null ? message.getEmbedColor() : "#5865F2"));
+        }catch (Exception ignored) {
+            eb.setColor(new Color(0x5865F2));
+        }
+
+        return eb;
     }
 
     public static List<ActionRow> buildActionRows(CommunityGuildConfig cfg) {

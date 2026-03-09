@@ -67,18 +67,6 @@ public class TicketGuildConfigService {
             config.setLogChannelId(null);
         }
 
-        config.setEmbedTitle(
-                request.embedTitle() == null || request.embedTitle().isBlank()
-                        ? "Support Ticket"
-                        : request.embedTitle()
-        );
-
-        config.setEmbedDescription(
-                request.embedDescription() == null || request.embedDescription().isBlank()
-                        ? "Klicke auf einen Button, um ein Ticket zu eröffnen."
-                        : request.embedDescription()
-        );
-
         if (request.threadType() != null) {
             config.setThreadType(request.threadType());
         }

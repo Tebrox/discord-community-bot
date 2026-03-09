@@ -148,7 +148,6 @@ public class CommunityGuildConfigService {
             if (cfg.getStatusButton() == null) cfg.setStatusButton(new CommunityGuildConfig.StatusButtonConfig());
             if (cfg.getLayout() == null) cfg.setLayout(new CommunityGuildConfig.LayoutConfig());
             if (cfg.getWelcome() == null) cfg.setWelcome(new CommunityGuildConfig.WelcomeConfig());
-            if (cfg.getWelcome().getEmbed() == null) cfg.getWelcome().setEmbed(new CommunityGuildConfig.EmbedConfig());
             return cfg;
         } catch (Exception e) {
             log.error("Failed to deserialize guild config for {}: {}. Falling back to defaults.",

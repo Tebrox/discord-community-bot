@@ -1,8 +1,12 @@
 package de.tebrox.communitybot.community.discord.listener;
 
 import de.tebrox.communitybot.community.config.CommunityGuildConfig;
+import de.tebrox.communitybot.community.discord.commands.PanelBuilder;
 import de.tebrox.communitybot.community.service.CommunityGuildConfigService;
 import de.tebrox.communitybot.community.service.WelcomeTrackingService;
+import de.tebrox.communitybot.core.message.MessageKey;
+import de.tebrox.communitybot.core.message.service.GuildMessageService;
+import de.tebrox.communitybot.core.message.service.ResolvedMessage;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -15,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -24,10 +29,12 @@ public class WelcomeListener extends ListenerAdapter {
 
     private final CommunityGuildConfigService configManager;
     private final WelcomeTrackingService welcomeTrackingService;
+    private final GuildMessageService guildMessageService;
 
-    public WelcomeListener(CommunityGuildConfigService configManager, WelcomeTrackingService welcomeTrackingService) {
+    public WelcomeListener(CommunityGuildConfigService configManager, WelcomeTrackingService welcomeTrackingService, GuildMessageService guildMessageService) {
         this.configManager = configManager;
         this.welcomeTrackingService = welcomeTrackingService;
+        this.guildMessageService = guildMessageService;
     }
 
     @Override
@@ -57,6 +64,12 @@ public class WelcomeListener extends ListenerAdapter {
             return;
         }
 
+        TextChannel channel1 = guild.getTextChannelById(wc.getChannelId());
+        if(channel == null) {
+            log.warn("[WelcomeListener] Welcome channel not found: {} (guild: {})", wc.getChannelId(), guildId);
+            return;
+        }
+
         String mention     = user.getAsMention();
         String userName    = user.getName();
         String tag         = user.getAsTag();
@@ -66,60 +79,41 @@ public class WelcomeListener extends ListenerAdapter {
         String memberCount = String.valueOf(guild.getMemberCount());
         String avatarUrl   = user.getEffectiveAvatarUrl();
 
-        if (wc.getEmbed().isEnabled()) {
-            CommunityGuildConfig.EmbedConfig ec = wc.getEmbed();
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setTitle(resolve(ec.getTitle(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl));
-            eb.setDescription(resolve(ec.getDescription(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl));
+        Map<String, String> placeholders = Map.of(
+          "mention", mention,
+          "user", userName,
+          "tag", tag,
+          "id", memberId,
+          "server", serverName,
+          "serverId", serverId,
+          "memberCount", memberCount,
+          "avatarUrl", avatarUrl
+        );
 
-            String footer = resolve(ec.getFooter(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl);
-            if (footer != null && !footer.isBlank()) eb.setFooter(footer);
-
-            String thumbnail = resolve(ec.getThumbnail(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl);
-            if (thumbnail != null && !thumbnail.isBlank() && thumbnail.startsWith("http")) {
-                eb.setThumbnail(thumbnail);
+        ResolvedMessage publicMessage = guildMessageService.resolve(guildId, MessageKey.WELCOME_PUBLIC, placeholders);
+        if(publicMessage.isEnabled()) {
+            if(publicMessage.isEmbedEnabled()) {
+                EmbedBuilder eb = PanelBuilder.buildEmbed(publicMessage);
+                channel.sendMessageEmbeds(eb.build()).queue(
+                        msg -> scheduleDelete(msg, wc.getDeleteAfterSeconds()),
+                        err -> log.error("[WelcomeListener] Failed to send welcome embed: {}", err.getMessage())
+                );
+            } else if(publicMessage.getContent() != null && !publicMessage.getContent().isBlank()) {
+                channel.sendMessage(publicMessage.getContent()).queue(
+                        msg -> scheduleDelete(msg, wc.getDeleteAfterSeconds()),
+                        err -> log.error("[WelcomeListener] Failed to send welcome text: {}", err.getMessage())
+                );
             }
-
-            try {
-                eb.setColor(new Color(Integer.parseInt(ec.getColor().replace("#", ""), 16)));
-            } catch (Exception ignored) {
-                eb.setColor(new Color(0x5865F2));
-            }
-
-            log.info("[WelcomeListener] Member joined: {} ({}) in guild {} ({})",
-                    tag,
-                    memberId,
-                    serverName,
-                    serverId);
-
-            channel.sendMessageEmbeds(eb.build()).queue(
-                    msg -> {
-                        log.info("[WelcomeListener] Welcome message sent for user {} in channel {} (msgId={})",
-                                memberId,
-                                channel.getId(),
-                                msg.getId());
-
-                        scheduleDelete(msg, wc.getDeleteAfterSeconds());
-                    },
-                    err -> log.error("[WelcomeListener] Failed to send welcome for user {} in guild {}: {}",
-                            memberId,
-                            guild.getId(),
-                            err.getMessage())
-            );
-        } else if (wc.getMessage() != null && !wc.getMessage().isBlank()) {
-            String text = resolve(wc.getMessage(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl);
-            channel.sendMessage(text).queue(
-                    msg -> scheduleDelete(msg, wc.getDeleteAfterSeconds()),
-                    err -> log.error("[WelcomeListener] Failed to send welcome: {}", err.getMessage())
-            );
         }
 
-        if (wc.isSendDm() && wc.getMessage() != null && !wc.getMessage().isBlank()) {
-            String dmText = resolve(wc.getMessage(), mention, userName, tag, memberId, serverName, memberCount, avatarUrl);
-            user.openPrivateChannel().queue(
-                    pm -> pm.sendMessage(dmText).queue(null, ignored -> {}),
-                    ignored -> {}
-            );
+        if(wc.isSendDm()) {
+            ResolvedMessage dmMessage = guildMessageService.resolve(guildId, MessageKey.WELCOME_DM, placeholders);
+            if (dmMessage.isEnabled() && dmMessage.getContent() != null && !dmMessage.getContent().isBlank()) {
+                user.openPrivateChannel().queue(
+                        pm -> pm.sendMessage(dmMessage.getContent()).queue(null, ignored -> {}),
+                        ignored -> {}
+                );
+            }
         }
     }
 
@@ -128,17 +122,5 @@ public class WelcomeListener extends ListenerAdapter {
             msg.delete().queueAfter(seconds, TimeUnit.SECONDS, null,
                     err -> log.warn("[WelcomeListener] Delete failed: {}", err.getMessage()));
         }
-    }
-
-    private String resolve(String t, String mention, String user, String tag,
-                           String id, String server, String memberCount, String avatarUrl) {
-        if (t == null) return "";
-        return t.replace("{mention}", mention)
-                .replace("{user}", user)
-                .replace("{tag}", tag)
-                .replace("{id}", id)
-                .replace("{server}", server)
-                .replace("{memberCount}", memberCount)
-                .replace("{avatarUrl}", avatarUrl);
     }
 }

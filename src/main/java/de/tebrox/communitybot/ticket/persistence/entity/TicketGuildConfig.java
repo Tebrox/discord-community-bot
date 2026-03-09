@@ -39,14 +39,6 @@ public class TicketGuildConfig {
     @Column(name = "thread_type", nullable = false, length = 32)
     private ThreadType threadType = ThreadType.PUBLIC_THREAD;
 
-    @Size(max = 256)
-    @Column(name = "embed_title", length = 256)
-    private String embedTitle = "Support Ticket";
-
-    @Size(max = 4096)
-    @Column(name = "embed_description", length = 4096)
-    private String embedDescription = "Klicke auf einen Button, um ein Ticket zu eröffnen.";
-
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "ticket_guild_support_roles",
@@ -108,22 +100,6 @@ public class TicketGuildConfig {
 
     public void setThreadType(ThreadType threadType) {
         this.threadType = threadType;
-    }
-
-    public String getEmbedTitle() {
-        return embedTitle;
-    }
-
-    public void setEmbedTitle(String embedTitle) {
-        this.embedTitle = embedTitle;
-    }
-
-    public String getEmbedDescription() {
-        return embedDescription;
-    }
-
-    public void setEmbedDescription(String embedDescription) {
-        this.embedDescription = embedDescription;
     }
 
     public List<String> getSupportRoleIds() {

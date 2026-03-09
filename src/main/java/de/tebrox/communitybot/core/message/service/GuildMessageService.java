@@ -84,4 +84,39 @@ public class GuildMessageService {
                 .custom(custom)
                 .build();
     }
+
+    public ResolvedMessage resolveDefault(MessageKey key, Map<String, String> placeholders) {
+
+        DefaultMessageDefinition defaults = defaultRegistry.get(key);
+        if (defaults == null) {
+            throw new IllegalArgumentException("Keine Default-Definition für MessageKey vorhanden: " + key);
+        }
+
+        String content = renderer.render(defaults.getContent(), placeholders);
+
+        String embedTitle = renderer.render(defaults.getEmbedTitle(), placeholders);
+
+        String embedDescription = renderer.render(defaults.getEmbedDescription(), placeholders);
+
+        String embedFooter = renderer.render(defaults.getEmbedFooter(), placeholders);
+
+        String thumbnailUrl = renderer.render(defaults.getThumbnailUrl(), placeholders);
+
+        String imageUrl = renderer.render(defaults.getImageUrl(), placeholders);
+
+        log.info("Resolved DEFAULT message key={}", key);
+
+        return ResolvedMessage.builder()
+                .enabled(defaults.isEnabled())
+                .content(content)
+                .embedEnabled(defaults.isEmbedEnabled())
+                .embedTitle(embedTitle)
+                .embedDescription(embedDescription)
+                .embedFooter(embedFooter)
+                .embedColor(defaults.getEmbedColor())
+                .thumbnailUrl(thumbnailUrl)
+                .imageUrl(imageUrl)
+                .custom(false)
+                .build();
+    }
 }

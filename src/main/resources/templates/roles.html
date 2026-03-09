@@ -27,11 +27,6 @@
             <form th:action="@{'/guild/' + ${guildId} + '/roles/save-title'}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-                <div class="form-group">
-                    <label for="panel-title">Titel</label>
-                    <input id="panel-title" type="text" name="title" class="form-input" th:value="${cfg.panel.title}" maxlength="256" required/>
-                </div>
-
                 <div class="form-actions">
                     <button class="btn btn-primary" type="submit">Speichern</button>
                 </div>

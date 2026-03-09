@@ -39,9 +39,6 @@ public class DemoGuildConfigSeeder implements CommandLineRunner {
 
         cfg.getWelcome().setEnabled(true);
         cfg.getWelcome().setChannelId("777777777777777777");
-        cfg.getWelcome().getEmbed().setEnabled(true);
-        cfg.getWelcome().getEmbed().setTitle("Willkommen (Demo)");
-        cfg.getWelcome().getEmbed().setDescription("Hey {mention}, willkommen auf {server}! (Demo)");
 
         String json = om.writeValueAsString(cfg);
 
