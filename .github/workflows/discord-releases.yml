@@ -1,0 +1,87 @@
+name: Discord Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Build Discord payload
+        id: payload
+        env:
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          TAG: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+          WEBHOOK_RELEASES: ${{ secrets.DISCORD_WEBHOOK_RELEASES }}
+          WEBHOOK_SNAPSHOTS: ${{ secrets.DISCORD_WEBHOOK_SNAPSHOTS }}
+        run: |
+          name="${RELEASE_NAME:-$TAG}"
+          title="$REPO_NAME — $name"
+
+          body=$(printf "%s" "$RELEASE_BODY" | head -c 3500)
+          if [ -z "$body" ]; then
+            body="No release notes provided."
+          fi
+
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            color=16098851
+            extra="Snapshot Release"
+            webhook_url="$WEBHOOK_SNAPSHOTS"
+            username="GitHub Snapshots"
+          else
+            color=3066993
+            extra="Stable Release"
+            webhook_url="$WEBHOOK_RELEASES"
+            username="GitHub Releases"
+          fi
+
+          payload=$(jq -n \
+            --arg username "$username" \
+            --arg title "$title" \
+            --arg url "$RELEASE_URL" \
+            --arg description "$body" \
+            --arg repo "$REPO" \
+            --arg tag "$TAG" \
+            --arg extra "$extra" \
+            --argjson color "$color" \
+            '{
+              username: $username,
+              embeds: [
+                {
+                  title: $title,
+                  url: $url,
+                  description: $description,
+                  color: $color,
+                  fields: [
+                    { name: "Repository", value: $repo, inline: true },
+                    { name: "Version", value: $tag, inline: true },
+                    { name: "Type", value: $extra, inline: true }
+                  ]
+                }
+              ]
+            }')
+
+          echo "payload<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$payload" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          echo "webhook_url=$webhook_url" >> "$GITHUB_OUTPUT"
+
+      - name: Send to Discord
+        env:
+          WEBHOOK_URL: ${{ steps.payload.outputs.webhook_url }}
+          PAYLOAD: ${{ steps.payload.outputs.payload }}
+        run: |
+          curl -fsS -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "$WEBHOOK_URL"
