@@ -41,12 +41,12 @@ jobs:
             color=16098851
             extra="Snapshot Release"
             webhook_url="$WEBHOOK_SNAPSHOTS"
-            username="GitHub Snapshots"
+            username="GitHub"
           else
             color=3066993
             extra="Stable Release"
             webhook_url="$WEBHOOK_RELEASES"
-            username="GitHub Releases"
+            username="GitHub"
           fi
 
           if [ -z "$webhook_url" ]; then

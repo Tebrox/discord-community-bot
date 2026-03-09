@@ -30,10 +30,10 @@ jobs:
             exit 1
           fi
 
-          if [ "$BRANCH" = "main" ]; then
+          if [ "$BRANCH" = "master" ]; then
             branch_label="stable"
             color=3066993
-          elif [ "$BRANCH" = "dev" ]; then
+          elif [ "$BRANCH" = "development" ]; then
             branch_label="development"
             color=16098851
           else
@@ -75,7 +75,7 @@ jobs:
           repo_icon="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
 
           payload=$(jq -n             --arg title "$title"             --arg description "$description"             --arg repo "$repo_link"             --arg repoIcon "$repo_icon"             --arg branch "$BRANCH"             --arg branchLabel "$branch_label"             --arg actor "$ACTOR"             --arg url "$COMPARE_URL"             --argjson color "$color"             '{
-              username: "GitHub Commits",
+              username: "GitHub",
               embeds: [
                 {
                   title: $title,
