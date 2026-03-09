@@ -83,13 +83,10 @@ public class CommunityGuildConfig {
     // ------------------------------------------------------------------ nested POJOs
 
     public static class PanelConfig {
-        private String title = "Benachrichtigungs-Rollen";
         private String requirePermission = "MANAGE_SERVER";
         private String allowedChannelId = "";
         private boolean enforceChannelLock = false;
 
-        public String getTitle() { return title; }
-        public void setTitle(String t) { this.title = t; }
         public String getRequirePermission() { return requirePermission; }
         public void setRequirePermission(String p) { this.requirePermission = p; }
         public String getAllowedChannelId() { return allowedChannelId; }
@@ -139,8 +136,6 @@ public class CommunityGuildConfig {
         private boolean sendDm = false;
         private int deleteAfterSeconds = 0;
         private boolean onlyFirstJoin = true;
-        private String message = "";
-        private EmbedConfig embed = new EmbedConfig();
 
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean e) { this.enabled = e; }
@@ -152,31 +147,5 @@ public class CommunityGuildConfig {
         public void setDeleteAfterSeconds(int d) { this.deleteAfterSeconds = d; }
         public boolean isOnlyFirstJoin() { return onlyFirstJoin; }
         public void setOnlyFirstJoin(boolean o) { this.onlyFirstJoin = o; }
-        public String getMessage() { return message; }
-        public void setMessage(String m) { this.message = m; }
-        public EmbedConfig getEmbed() { return embed; }
-        public void setEmbed(EmbedConfig e) { this.embed = e; }
-    }
-
-    public static class EmbedConfig {
-        private boolean enabled = true;
-        private String color = "#5865F2";
-        private String title = "Willkommen, {mention}!";
-        private String description = "**{user}** ist dem Server **{server}** beigetreten.\nMitglieder: **{memberCount}**";
-        private String footer = "User ID: {id}";
-        private String thumbnail = "{avatarUrl}";
-
-        public boolean isEnabled() { return enabled; }
-        public void setEnabled(boolean e) { this.enabled = e; }
-        public String getColor() { return color; }
-        public void setColor(String c) { this.color = c; }
-        public String getTitle() { return title; }
-        public void setTitle(String t) { this.title = t; }
-        public String getDescription() { return description; }
-        public void setDescription(String d) { this.description = d; }
-        public String getFooter() { return footer; }
-        public void setFooter(String f) { this.footer = f; }
-        public String getThumbnail() { return thumbnail; }
-        public void setThumbnail(String t) { this.thumbnail = t; }
     }
 }
