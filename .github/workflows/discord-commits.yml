@@ -30,10 +30,10 @@ jobs:
             exit 1
           fi
 
-          if [ "$BRANCH" = "master" ]; then
+          if [ "$BRANCH" = "main" ]; then
             branch_label="stable"
             color=3066993
-          elif [ "$BRANCH" = "development" ]; then
+          elif [ "$BRANCH" = "dev" ]; then
             branch_label="development"
             color=16098851
           else
@@ -44,14 +44,14 @@ jobs:
           commit_count=$(jq 'length' <<< "$COMMITS_JSON")
 
           if [ "$commit_count" -eq 1 ]; then
-            title="$REPO_NAME — New Commit"
+            title="$REPO_NAME ($BRANCH) — New Commit"
             description=$(jq -r '
               .[0] |
               .message |= (split("\n")[0] | if length > 100 then .[0:97] + "..." else . end) |
               "[\(.id[0:7])](\(.url)) \(.message) — **\(.author.name)**"
             ' <<< "$COMMITS_JSON")
           else
-            title="$REPO_NAME — New Push ($commit_count commits)"
+            title="$REPO_NAME ($BRANCH) — New Push ($commit_count commits)"
             description=$(jq -r '
               def shortmsg:
                 split("\n")[0] | if length > 100 then .[0:97] + "..." else . end;
@@ -70,16 +70,11 @@ jobs:
             ' <<< "$COMMITS_JSON")
           fi
 
-          payload=$(jq -n \
-            --arg title "$title" \
-            --arg description "$description" \
-            --arg repo "$REPO" \
-            --arg branch "$BRANCH" \
-            --arg branchLabel "$branch_label" \
-            --arg actor "$ACTOR" \
-            --arg url "$COMPARE_URL" \
-            --argjson color "$color" \
-            '{
+          repo_url="https://github.com/$REPO"
+          repo_link="[$REPO]($repo_url)"
+          repo_icon="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+
+          payload=$(jq -n             --arg title "$title"             --arg description "$description"             --arg repo "$repo_link"             --arg repoIcon "$repo_icon"             --arg branch "$BRANCH"             --arg branchLabel "$branch_label"             --arg actor "$ACTOR"             --arg url "$COMPARE_URL"             --argjson color "$color"             '{
               username: "GitHub Commits",
               embeds: [
                 {
@@ -87,12 +82,14 @@ jobs:
                   url: $url,
                   description: $description,
                   color: $color,
+                  thumbnail: { url: $repoIcon },
                   fields: [
                     { name: "Repository", value: $repo, inline: true },
                     { name: "Branch", value: $branch, inline: true },
                     { name: "Channel", value: $branchLabel, inline: true },
                     { name: "Pushed by", value: $actor, inline: true }
-                  ]
+                  ],
+                  footer: { text: "GitHub Commit Update" }
                 }
               ]
             }')
@@ -106,6 +103,4 @@ jobs:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_COMMITS }}
           PAYLOAD: ${{ steps.payload.outputs.payload }}
         run: |
-          curl -fsS -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            "$WEBHOOK_URL"
+          curl -fsS -H "Content-Type: application/json"             -d "$PAYLOAD"             "$WEBHOOK_URL"

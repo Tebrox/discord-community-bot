@@ -33,6 +33,10 @@ jobs:
             body="No release notes provided."
           fi
 
+          repo_url="https://github.com/$REPO"
+          repo_link="[$REPO]($repo_url)"
+          repo_icon="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+
           if [ "$IS_PRERELEASE" = "true" ]; then
             color=16098851
             extra="Snapshot Release"
@@ -45,16 +49,12 @@ jobs:
             username="GitHub Releases"
           fi
 
-          payload=$(jq -n \
-            --arg username "$username" \
-            --arg title "$title" \
-            --arg url "$RELEASE_URL" \
-            --arg description "$body" \
-            --arg repo "$REPO" \
-            --arg tag "$TAG" \
-            --arg extra "$extra" \
-            --argjson color "$color" \
-            '{
+          if [ -z "$webhook_url" ]; then
+            echo "Missing target webhook secret"
+            exit 1
+          fi
+
+          payload=$(jq -n             --arg username "$username"             --arg title "$title"             --arg url "$RELEASE_URL"             --arg description "$body"             --arg repo "$repo_link"             --arg repoIcon "$repo_icon"             --arg tag "$TAG"             --arg extra "$extra"             --argjson color "$color"             '{
               username: $username,
               embeds: [
                 {
@@ -62,11 +62,13 @@ jobs:
                   url: $url,
                   description: $description,
                   color: $color,
+                  thumbnail: { url: $repoIcon },
                   fields: [
                     { name: "Repository", value: $repo, inline: true },
                     { name: "Version", value: $tag, inline: true },
                     { name: "Type", value: $extra, inline: true }
-                  ]
+                  ],
+                  footer: { text: "GitHub Release Update" }
                 }
               ]
             }')
@@ -82,6 +84,4 @@ jobs:
           WEBHOOK_URL: ${{ steps.payload.outputs.webhook_url }}
           PAYLOAD: ${{ steps.payload.outputs.payload }}
         run: |
-          curl -fsS -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            "$WEBHOOK_URL"
+          curl -fsS -H "Content-Type: application/json"             -d "$PAYLOAD"             "$WEBHOOK_URL"
