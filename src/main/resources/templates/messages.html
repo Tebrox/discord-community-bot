@@ -155,7 +155,7 @@
                 <label>Verfügbare Platzhalter</label>
                 <div class="muted">
                     <span th:each="ph, iter : ${entry.placeholders}">
-                        <code th:text="'{' + ph + '}'"></code><span th:if="${!iter.last}">, </span>
+                        <code th:text="${'{' + ph + '}'}"></code><span th:if="${!iter.last}">, </span>
                     </span>
                 </div>
             </div>
